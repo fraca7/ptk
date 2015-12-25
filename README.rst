@@ -37,7 +37,7 @@ All unit tests pass on the following platforms/Python version:
 +-----+-------+-----+---------+
 
 See the
-`Buildbot <https://jeromelaheurte.net/buildbot/ptk/waterfall/>`_ for
+`Buildbot <https://jeromelaheurte.net/buildbot/ptk/waterfall>`_ for
 details.
 
 Although Python 2.6 is not officially supported, it does work with a
