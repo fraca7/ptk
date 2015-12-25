@@ -1,0 +1,13 @@
+syntax: glob
+
+*.pyc
+.DS_Store
+.coverage
+htmlcov
+lint.html
+.tox
+MANIFEST
+doc/build
+dist
+html
+

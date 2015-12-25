@@ -1,0 +1,3 @@
+ * LALR ? Not sure it's worth it.
+ * ProgressiveLexer: subset construction in byte mode
+ * Serialization, maybe

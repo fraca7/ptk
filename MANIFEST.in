@@ -1,0 +1,4 @@
+include *.rst *.rst.in *.txt prepare.py *.py pylintrc Makefile doc/Makefile doc/make.bat tox.ini
+recursive-include doc/source *
+recursive-include samples *.py
+recursive-include html *
