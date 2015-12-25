@@ -2,3 +2,5 @@ include *.rst *.rst.in *.txt prepare.py *.py pylintrc Makefile doc/Makefile doc/
 recursive-include doc/source *
 recursive-include samples *.py
 recursive-include html *
+recursive-include tests *.py
+
