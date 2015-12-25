@@ -53,7 +53,7 @@ Using pip::
 
 From source::
 
-  $ wget https://jeromelaheurte.net/ptk/download/ptk-1.0.0.tar.bz2
+  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.0.0.tar.gz
   $ tar xjf ptk-1.0.0.tar.bz2; cd ptk-1.0.0
   $ sudo python ./setup.py install
 
