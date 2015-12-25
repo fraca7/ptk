@@ -37,12 +37,12 @@ All unit tests pass on the following platforms/Python version:
 +-----+-------+-----+---------+
 
 See the
-`Buildbot<https://jeromelaheurte.net/buildbot/ptk/waterfall/>`_ for
+`Buildbot <https://jeromelaheurte.net/buildbot/ptk/waterfall/>`_ for
 details.
 
 Although Python 2.6 is not officially supported, it does work with a
 few minor code modifications, namely replacing
-functools.total_ordering with the `backport to 2.6<https://pypi.python.org/pypi/total-ordering>`_.
+functools.total_ordering with the `backport to 2.6 <https://pypi.python.org/pypi/total-ordering>`_.
 
 Installation
 ------------
