@@ -5,6 +5,7 @@ import os
 import shlex
 import six
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from ptk.meta import version, PackageInfo
 
 extensions = [
