@@ -1,7 +1,6 @@
 
 PYTHON?=python3
 VERSION=$(shell $(PYTHON) -c 'from ptk.meta import version; import six; six.print_(version)')
-FTPPWD=`grep FTPPWD ~/.ptkreleaserc | cut -f2 -d=`
 
 all:
 	@echo Targets:
@@ -38,5 +37,5 @@ documentation:
 tarball: documentation
 	$(PYTHON) setup.py sdist --formats=bztar
 
-release: tarball
-	curl -T dist/ptk-$(VERSION).tar.bz2 ftp://jerome:$(FTPPWD)@192.168.1.2/ptk-web/downloads/ptk-$(VERSION).tar.bz2
+release: documentation
+	python ./setup.py sdist upload -r pypi
