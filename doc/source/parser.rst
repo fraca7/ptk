@@ -168,6 +168,24 @@ is equivalent to
 The semantic value is a list of semantic values for B. '+' works the
 same way except for the empty production, so the list cannot be empty.
 
+Additionally, the '*' and '+' operators may include a separator
+specification, which is a symbol name or litteral token between parens:
+
+.. code-block:: none
+
+   A -> B+("|")<name>
+
+is equivalent to
+
+.. code-block:: none
+
+   A -> L_B<name>
+   L_B -> B
+   L_B -> L_B "|" B
+
+The semantic value is still a list of B values; there is no way to get
+the values for the separators.
+
 Wrapping it up
 --------------
 
