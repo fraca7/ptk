@@ -207,7 +207,7 @@ class LexerBase(six.with_metaclass(_LexerMeta, object)):
         return cls._allTokens()[0]
 
 
-class ReLexer(LexerBase):
+class ReLexer(LexerBase): # pylint: disable=W0223
     """
     Concrete lexer based on Python regular expressions. this is
     **way** faster than :py:class:`ProgressiveLexer` but it can only
@@ -235,24 +235,7 @@ class ReLexer(LexerBase):
                 if self.ignore(char):
                     pos += 1
                     continue
-                match = None
-                matchlen = 0
-                for rx, callback, defaultType in self.__regexes:
-                    mtc = rx.search(string[pos:])
-                    if mtc:
-                        value = mtc.group(0)
-                        if len(value) > matchlen:
-                            match = value, callback, defaultType
-                            matchlen = len(value)
-                if match:
-                    value, callback, defaultType = match
-                    tok = self._MutableToken(defaultType, value)
-                    callback(self, tok)
-                    pos += matchlen
-                    if self.consumer() is None and tok.type is not None:
-                        self.newToken(tok.token())
-                else:
-                    raise LexerError(string[pos:pos+10], *self.position())
+                self.__findMatch(string, pos)
             else:
                 tok = self.consumer().feed(char)
                 if tok is not None:
@@ -262,8 +245,29 @@ class ReLexer(LexerBase):
                 pos += 1
         self.newToken(EOF)
 
+    def __findMatch(self, string, pos):
+        match = None
+        matchlen = 0
+        for rx, callback, defaultType in self.__regexes:
+            mtc = rx.search(string[pos:])
+            if mtc:
+                value = mtc.group(0)
+                if len(value) > matchlen:
+                    match = value, callback, defaultType
+                    matchlen = len(value)
 
-class ProgressiveLexer(LexerBase):
+        if match:
+            value, callback, defaultType = match
+            tok = self._MutableToken(defaultType, value)
+            callback(self, tok)
+            pos += matchlen
+            if self.consumer() is None and tok.type is not None:
+                self.newToken(tok.token())
+        else:
+            raise LexerError(string[pos:pos+10], *self.position())
+
+
+class ProgressiveLexer(LexerBase): # pylint: disable=W0223
     """
     Concrete lexer based on a simple pure-Python regular expression
     engine. This lexer is able to tokenize an input stream in a
