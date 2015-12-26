@@ -203,7 +203,7 @@ class YaccParser(LRParser, ReLexer):
 
     # Parser
 
-    # Don't use META_DECLARATION* because it introduces reduce/reduce conflicts
+    # Don't use META_DECLARATION* because it introduces shift/reduce conflicts
     @production('YACC_FILE -> META_DECLARATION+ part_sep PRODUCTIONS_LIST')
     @production('YACC_FILE -> part_sep PRODUCTIONS_LIST')
     def yacc_file(self):
