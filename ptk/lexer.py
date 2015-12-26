@@ -235,7 +235,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
                 if self.ignore(char):
                     pos += 1
                     continue
-                self.__findMatch(string, pos)
+                pos = self.__findMatch(string, pos)
             else:
                 tok = self.consumer().feed(char)
                 if tok is not None:
@@ -263,6 +263,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
             pos += matchlen
             if self.consumer() is None and tok.type is not None:
                 self.newToken(tok.token())
+            return pos
         else:
             raise LexerError(string[pos:pos+10], *self.position())
 
