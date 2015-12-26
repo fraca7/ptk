@@ -107,6 +107,11 @@ The *samples* subdirectory in the source tree contains the
 aforementioned calculator and a script that generates a skeleton
 Python file from a Yacc or Bison grammar file.
 
+API documentation
+-----------------
+
+The full documentation is hosted `here <http://pythonhosted.org/ptk/>`_.
+
 Changelog
 ---------
 
