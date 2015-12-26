@@ -217,43 +217,10 @@ class LRParser(Grammar):
         cls.startSymbol = _StartState
         super(LRParser, cls).prepare()
 
-        # Compute go_to and states
-        allSyms = cls.tokenTypes() | cls.nonterminals()
-        goto = dict()
-        cls._startState = frozenset([_Item(prod, 0, EOF)])
-        states = set([cls._startState])
-        stack = [cls._startState]
-        while stack:
-            state = stack.pop()
-            stateClosure = cls.__itemSetClosure(state)
-            for symbol in allSyms:
-                # Compute goto(symbol, state)
-                nextState = set()
-                for item in stateClosure:
-                    if not item.shouldReduce() and item.production.right[item.dot] == symbol:
-                        nextState.add(item.next())
-                if nextState:
-                    nextState = frozenset(nextState)
-                    goto[(state, symbol)] = nextState
-                    if nextState not in states:
-                        states.add(nextState)
-                        stack.append(nextState)
+        states, goto = cls.__computeStates(prod)
+        reachable = cls.__computeActions(states, goto)
 
-        # Compute actions
         logger = logging.getLogger('LRParser')
-        cls.__actions__ = dict()
-        reachable = set()
-        for state in states:
-            for item in cls.__itemSetClosure(state):
-                if item.shouldReduce():
-                    action = _Reduce(item)
-                    reachable.add(item.production.name)
-                    cls.__addReduceAction(state, item.terminal, action)
-                else:
-                    symbol = item.production.right[item.dot]
-                    if symbol in cls.tokenTypes():
-                        cls.__addShiftAction(state, symbol, _Shift(goto[(state, symbol)]))
-
         cls.__resolveConflicts(logger)
 
         usedTokens = set([symbol for state, symbol in cls.__actions__.keys() if symbol is not EOF])
@@ -280,6 +247,46 @@ class LRParser(Grammar):
             for item in sorted(state):
                 logger.debug('    %s', item)
         logger.info('%d states.', len(states))
+
+    @classmethod
+    def __computeStates(cls, start):
+        allSyms = cls.tokenTypes() | cls.nonterminals()
+        goto = dict()
+        cls._startState = frozenset([_Item(start, 0, EOF)])
+        states = set([cls._startState])
+        stack = [cls._startState]
+        while stack:
+            state = stack.pop()
+            stateClosure = cls.__itemSetClosure(state)
+            for symbol in allSyms:
+                # Compute goto(symbol, state)
+                nextState = set()
+                for item in stateClosure:
+                    if not item.shouldReduce() and item.production.right[item.dot] == symbol:
+                        nextState.add(item.next())
+                if nextState:
+                    nextState = frozenset(nextState)
+                    goto[(state, symbol)] = nextState
+                    if nextState not in states:
+                        states.add(nextState)
+                        stack.append(nextState)
+        return states, goto
+
+    @classmethod
+    def __computeActions(cls, states, goto):
+        cls.__actions__ = dict()
+        reachable = set()
+        for state in states:
+            for item in cls.__itemSetClosure(state):
+                if item.shouldReduce():
+                    action = _Reduce(item)
+                    reachable.add(item.production.name)
+                    cls.__addReduceAction(state, item.terminal, action)
+                else:
+                    symbol = item.production.right[item.dot]
+                    if symbol in cls.tokenTypes():
+                        cls.__addShiftAction(state, symbol, _Shift(goto[(state, symbol)]))
+        return reachable
 
     @classmethod
     def __shouldPreferShift(cls, logger, reduceAction, symbol):
