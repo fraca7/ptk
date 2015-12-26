@@ -11,6 +11,14 @@ class GrammarUnderTest(Grammar):
     tokens = set()
 
     @classmethod
+    def addTokenType(cls, name, callback, regex, types=None):
+        if types is None:
+            cls.tokens.add(name)
+        else:
+            for name in types:
+                cls.tokens.add(name)
+
+    @classmethod
     def tokenTypes(cls):
         return cls.tokens
 
@@ -58,21 +66,25 @@ class ProductionParserTestCase(unittest.TestCase):
         prod, = self._parse('test -> A B')
         self.assertEqual(prod.right, ['A', 'B'])
 
+    def test_escape_litteral(self):
+        prod, = self._parse(r'test -> "spam\"foo"')
+        self.assertEqual(prod.right, [r'spam"foo'])
+
     def _findListSym(self, prods):
         for prod in prods:
-            if prod.name == 'test' and prod.right:
-                return prod.right[0]
+            if prod.name != 'test':
+                return prod.name
         self.fail('Cannot find list symbol in %s' % repr(prods))
 
     def test_list(self):
-        prods = self._parse('test -> A*')
+        prods = self._parse('test -> A* "+"')
         self.assertEqual(len(prods), 4, repr(prods))
         listSym = self._findListSym(prods)
 
-        self.assertHasProduction(prods, ('test', []))
+        self.assertHasProduction(prods, ('test', ['+']))
         self.assertHasProduction(prods, (listSym, ['A']))
         self.assertHasProduction(prods, (listSym, [listSym, 'A']))
-        self.assertHasProduction(prods, ('test', [listSym]))
+        self.assertHasProduction(prods, ('test', [listSym, '+']))
 
     def test_list_not_empty(self):
         prods = self._parse('test -> A+')
@@ -93,7 +105,6 @@ class ProductionParserTestCase(unittest.TestCase):
         self.assertHasProduction(prods, ('test', [listSym]))
 
     def test_list_with_litteral_separator(self):
-        self.grammarClass.tokens.add('|')
         prods = self._parse('test -> A+("|")')
         self.assertEqual(len(prods), 3, repr(prods))
         listSym = self._findListSym(prods)
@@ -173,9 +184,7 @@ class GrammarTestCase(unittest.TestCase):
     def test_token_name(self):
         try:
             class G(GrammarUnderTest):
-                @classmethod
-                def tokenTypes(self):
-                    return set(['spam'])
+                tokens = set(['spam'])
                 @production('spam -> spam')
                 def spam(self):
                     pass

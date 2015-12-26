@@ -224,10 +224,10 @@ class LRParser(Grammar):
         cls.__resolveConflicts(logger)
 
         usedTokens = set([symbol for state, symbol in cls.__actions__.keys() if symbol is not EOF])
-        if usedTokens != cls.tokenTypes():
-            logger.warning('The following tokens are not used: %s', ','.join(sorted(cls.tokenTypes() - usedTokens)))
+        if usedTokens != cls.tokenTypes(): # pragma: no cover
+            logger.warning('The following tokens are not used: %s', ','.join([repr(sym) for sym in sorted(cls.tokenTypes() - usedTokens)]))
 
-        if reachable != cls.nonterminals():
+        if reachable != cls.nonterminals(): # pragma: no cover
             logger.warning('The following nonterminals are not reachable: %s', ','.join([repr(sym) for sym in sorted(cls.nonterminals() - reachable)]))
 
         # Reductions only need goto entries for nonterminals
