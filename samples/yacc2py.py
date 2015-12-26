@@ -60,7 +60,7 @@ class Options(object):
 
 class NullToken(object):
     def __init__(self, endMarker):
-        self.__rx = buildRegex('.*%s' % re.escape(endMarker))
+        self.__rx = buildRegex('(.|\n)*%s' % re.escape(endMarker)).start()
 
     def feed(self, char):
         try:
@@ -118,6 +118,29 @@ class YaccParser(LRParser, ReLexer):
     @token(r'[a-zA-Z_][a-zA-Z0-9_]*')
     def identifier(self, tok):
         pass
+
+    @token('[1-9][0-9]*')
+    def number(self, tok):
+        tok.value = int(tok.value)
+
+    @token('"')
+    def string(self, tok):
+        class StringParser(object):
+            def __init__(self):
+                self.state = 0
+                self.value = six.StringIO()
+            def feed(self, char):
+                if self.state == 0:
+                    if char == '"':
+                        return 'string', self.value.getvalue()
+                    if char == '\\':
+                        self.state = 1
+                    else:
+                        self.value.write(char)
+                elif self.state == 1:
+                    self.value.write(char)
+                    self.state = 0
+        self.setConsumer(StringParser())
 
     @token(r'\{')
     def semantic_action(self, tok):
@@ -185,6 +208,24 @@ class YaccParser(LRParser, ReLexer):
     @production('META_DECLARATION -> "%start" identifier<name>')
     def start_declaration(self, name):
         self.yaccStartSymbol = name
+
+    @production('META_DECLARATION -> "%type" identifier identifier+')
+    @production('META_DECLARATION -> "%expect" number')
+    @production('META_DECLARATION -> "%debug"')
+    @production('META_DECLARATION -> "%defines"')
+    @production('META_DECLARATION -> "%destructor" semantic_action identifier+')
+    @production('META_DECLARATION -> "%file-prefix" "=" string')
+    @production('META_DECLARATION -> "%locations"')
+    @production('META_DECLARATION -> "%name-prefix" "=" string')
+    @production('META_DECLARATION -> "%no-parser')
+    @production('META_DECLARATION -> "%no-lines')
+    @production('META_DECLARATION -> "%output" "=" string')
+    @production('META_DECLARATION -> "%pure-parser"')
+    @production('META_DECLARATION -> "%token-table"')
+    @production('META_DECLARATION -> "%verbose"')
+    @production('META_DECLARATION -> "%yacc"')
+    def ignored_declaration(self):
+        pass
 
     # Productions
 
