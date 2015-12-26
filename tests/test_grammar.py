@@ -60,7 +60,7 @@ class ProductionParserTestCase(unittest.TestCase):
 
     def _findListSym(self, prods):
         for prod in prods:
-            if prod.name == 'test':
+            if prod.name == 'test' and prod.right:
                 return prod.right[0]
         self.fail('Cannot find list symbol in %s' % repr(prods))
 
@@ -69,7 +69,7 @@ class ProductionParserTestCase(unittest.TestCase):
         self.assertEqual(len(prods), 4, repr(prods))
         listSym = self._findListSym(prods)
 
-        self.assertHasProduction(prods, (listSym, []))
+        self.assertHasProduction(prods, ('test', []))
         self.assertHasProduction(prods, (listSym, ['A']))
         self.assertHasProduction(prods, (listSym, [listSym, 'A']))
         self.assertHasProduction(prods, ('test', [listSym]))

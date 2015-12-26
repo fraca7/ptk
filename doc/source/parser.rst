@@ -135,35 +135,35 @@ Repeat operators
 A nonterminal in the right side of a production may be immediately
 followed by a repeat operator among "*", "+" and "?", which have the
 same meaning as in regular expressions. Note that this is only
-syntactic sugar; under the hood additional productions are generated:
+syntactic sugar; under the hood additional productions are
+generated.
 
 .. code-block:: none
 
-   A -> B?<name>
+   A -> B?
 
 is equivalent to
 
 .. code-block:: none
 
-   A -> L_B<name>
-   L_B ->
-   L_B -> B
+   A ->
+   A -> B
 
 The semantic value is None if the empty production was applied, or the
 semantic value of B if the 'L_B -> B' production was applied.
 
 .. code-block:: none
 
-   A -> B*<name>
+   A -> B*
 
 is equivalent to
 
 .. code-block:: none
 
-   A -> L_B<name>
-   L_B ->
-   L_B -> A
-   L_B -> L_B A
+   A ->
+   A -> L_B
+   L_B -> B
+   L_B -> L_B B
 
 The semantic value is a list of semantic values for B. '+' works the
 same way except for the empty production, so the list cannot be empty.
@@ -173,13 +173,13 @@ specification, which is a symbol name or litteral token between parens:
 
 .. code-block:: none
 
-   A -> B+("|")<name>
+   A -> B+("|")
 
 is equivalent to
 
 .. code-block:: none
 
-   A -> L_B<name>
+   A -> L_B
    L_B -> B
    L_B -> L_B "|" B
 
@@ -223,6 +223,19 @@ Fully functional parser for a four-operations integer calculator:
 	       '*': operator.mul,
 	       '/': operator.floordiv
 	       }[op](left, right)
+
+Parsing lists of integers separated by commas:
+
+.. code-block:: python
+
+   class Parser(LRParser, ReLexer):
+       @token('[1-9][0-9]*')
+       def number(self, tok):
+           tok.value = int(tok.value)
+       @production('LIST -> number*(",")<values>')
+       def integer_list(self, values):
+           print('Values are: %s' % values)
+
 
 Conflict resolution rules
 =========================
