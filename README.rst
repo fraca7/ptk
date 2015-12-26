@@ -118,3 +118,5 @@ Changelog
 Version 1.1.0:
 
 - Added repeat operators ('*', '+', '?') in production syntax.
+- Support for more yacc/bison declarations in yacc2py sample (most are
+  actually ignored)
