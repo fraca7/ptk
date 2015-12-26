@@ -246,7 +246,7 @@ class RegexCharacterClass(CharacterClass): # pylint: disable=R0903
         if pattern not in self._cache:
             try:
                 flags = 0
-                if six.PY2 and isinstance(pattern, unicode):
+                if six.PY2 and isinstance(pattern, unicode): # pylint: disable=E0602
                     flags = re.UNICODE
                 self._cache[pattern] = re.compile(pattern, flags)
             except re.error as exc:

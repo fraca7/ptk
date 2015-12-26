@@ -10,8 +10,9 @@ import logging
 import re
 
 from ptk.lexer import ProgressiveLexer, EOF, token
+from ptk.grammar import Grammar, Production, GrammarError
 # production is only imported so that client code doesn't have to import it from grammar
-from ptk.grammar import Grammar, Production, GrammarError, production
+from ptk.grammar import production # pylint: disable=W0611
 from ptk.utils import Singleton
 
 
@@ -207,7 +208,7 @@ class LRParser(Grammar):
             if prod.name is _StartState:
                 break
         else:
-            def acceptor(grammar, result):
+            def acceptor(_, result):
                 raise _Accept(result)
             prod = Production(_StartState, acceptor)
             prod.addSymbol(cls._defaultStartSymbol() if cls.startSymbol is None else cls.startSymbol, name='result')
