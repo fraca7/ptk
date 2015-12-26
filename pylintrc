@@ -66,7 +66,7 @@ valid-classmethod-first-arg=cls
 valid-metaclass-classmethod-first-arg=metacls
 
 [DESIGN]
-max-args=5
+max-args=6
 ignored-argument-names=_.*
 max-locals=15
 max-returns=6

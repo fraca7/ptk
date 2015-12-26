@@ -182,5 +182,98 @@ class LRTestCase(unittest.TestCase):
         self.assertEqual(self.parser.nSR, 0)
 
 
+class ListTestCase(unittest.TestCase):
+    def setUp(self):
+        class Parser(LRParser, ProgressiveLexer):
+            def __init__(self, testCase):
+                super(Parser, self).__init__()
+                self.testCase = testCase
+            @token('[a-z]+')
+            def identifier(self, tok):
+                pass
+            @production('L -> identifier*<tokens>')
+            def idlist(self, tokens):
+                return tokens
+            def newSentence(self, symbol):
+                self.testCase.seen = symbol
+
+        self.parser = Parser(self)
+        self.seen = None
+
+    def test_empty(self):
+        self.parser.parse('')
+        self.assertEqual(self.seen, [])
+
+    def test_items(self):
+        self.parser.parse('a b c')
+        self.assertEqual(self.seen, ['a', 'b', 'c'])
+
+
+class NonEmptyListTestCase(unittest.TestCase):
+    def setUp(self):
+        class Parser(LRParser, ProgressiveLexer):
+            def __init__(self, testCase):
+                super(Parser, self).__init__()
+                self.testCase = testCase
+            @token('[a-z]+')
+            def identifier(self, tok):
+                pass
+            @production('L -> identifier+<tokens>')
+            def idlist(self, tokens):
+                return tokens
+            def newSentence(self, symbol):
+                self.testCase.seen = symbol
+
+        self.parser = Parser(self)
+        self.seen = None
+
+    def test_empty(self):
+        try:
+            self.parser.parse('')
+        except ParseError:
+            pass
+        else:
+            self.fail('Got %s' % self.seen)
+
+    def test_items(self):
+        self.parser.parse('a b c')
+        self.assertEqual(self.seen, ['a', 'b', 'c'])
+
+
+class AtMostOneTestCase(unittest.TestCase):
+    def setUp(self):
+        class Parser(LRParser, ProgressiveLexer):
+            def __init__(self, testCase):
+                super(Parser, self).__init__()
+                self.testCase = testCase
+            @token('[a-z]+')
+            def identifier(self, tok):
+                pass
+            @production('L -> identifier?<tok>')
+            def idlist(self, tok):
+                return tok
+            def newSentence(self, symbol):
+                self.testCase.seen = symbol
+
+        self.parser = Parser(self)
+        self.seen = 1
+
+    def test_none(self):
+        self.parser.parse('')
+        self.assertEqual(self.seen, None)
+
+    def test_value(self):
+        self.parser.parse('a')
+        self.assertEqual(self.seen, 'a')
+
+    def test_error(self):
+        try:
+            self.parser.parse('a b')
+        except ParseError:
+            pass
+        else:
+            self.fail('Got %s' % self.seen)
+
+
 if __name__ == '__main__':
     unittest.main()

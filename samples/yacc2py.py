@@ -203,29 +203,19 @@ class YaccParser(LRParser, ReLexer):
 
     # Parser
 
-    @production('YACC_FILE -> META_DECLARATION_LIST part_sep PRODUCTIONS_LIST')
+    # Don't use META_DECLARATION* because it introduces reduce/reduce conflicts
+    @production('YACC_FILE -> META_DECLARATION+ part_sep PRODUCTIONS_LIST')
     @production('YACC_FILE -> part_sep PRODUCTIONS_LIST')
     def yacc_file(self):
         pass
 
-    @production('IDENTIFIER_LIST -> identifier<name>')
-    @production('IDENTIFIER_LIST -> IDENTIFIER_LIST<others> identifier<name>')
-    def identifier_list(self, name, others=None):
-        others = list() if others is None else others
-        others.append(name)
-        return others
-
     # Tokens, start symbol, etc
 
-    @production('META_DECLARATION_LIST -> META_DECLARATION_LIST META_DECLARATION | META_DECLARATION')
-    def meta_declaration_list(self):
-        pass
-
-    @production('META_DECLARATION -> token_decl IDENTIFIER_LIST<tokens>')
+    @production('META_DECLARATION -> token_decl identifier+<tokens>')
     def token_declaration(self, tokens):
         self.allTokens.extend(tokens)
 
-    @production('META_DECLARATION -> assoc_decl<assoc> IDENTIFIER_LIST<tokens>')
+    @production('META_DECLARATION -> assoc_decl<assoc> identifier+<tokens>')
     def assoc_declaration(self, assoc, tokens):
         self.precedences.append((assoc, tokens))
 
@@ -248,11 +238,9 @@ class YaccParser(LRParser, ReLexer):
         prodList.append(prod)
         return prodList
 
-    @production('PRODUCTION_DECL ->')
-    @production('PRODUCTION_DECL -> SYMBOL_LIST<symbols>')
-    def production_decl(self, symbols=None):
-        symbols = [] if symbols is None else symbols
-
+    @production('PRODUCTION_DECL -> ') # Empty
+    @production('PRODUCTION_DECL -> SYMBOL+<symbols>')
+    def production_decl(self, symbols):
         names = list()
         indexes = dict()
         for symbol in symbols:
@@ -287,12 +275,6 @@ class YaccParser(LRParser, ReLexer):
     @production('SYMBOL -> litteral_token<tok>')
     def symbol_from_litteral(self, tok):
         return Symbol('"%s"' % tok, None)
-
-    @production('SYMBOL_LIST -> SYMBOL<sym> | SYMBOL_LIST<syms> SYMBOL<sym>')
-    def symbol_list(self, sym, syms=None):
-        syms = [] if syms is None else syms
-        syms.append(sym)
-        return syms
 
     def newSentence(self, result):
         self.stream.write('from ptk.lexer import ReLexer, token\n')
