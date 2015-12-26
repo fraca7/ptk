@@ -203,9 +203,7 @@ class YaccParser(LRParser, ReLexer):
 
     # Parser
 
-    # Don't use META_DECLARATION* because it introduces shift/reduce conflicts
-    @production('YACC_FILE -> META_DECLARATION+ part_sep PRODUCTIONS_LIST')
-    @production('YACC_FILE -> part_sep PRODUCTIONS_LIST')
+    @production('YACC_FILE -> META_DECLARATION* part_sep PRODUCTION_DECL*')
     def yacc_file(self):
         pass
 
@@ -223,17 +221,14 @@ class YaccParser(LRParser, ReLexer):
     def start_declaration(self, name):
         self.yaccStartSymbol = name
 
-    # Productions; we assume there's always at least one
+    # Productions
 
-    @production('PRODUCTIONS_LIST -> identifier<left> ":" PRODUCTION_DECL+("|")<productions> ";"')
-    @production('PRODUCTIONS_LIST -> PRODUCTIONS_LIST identifier<left> ":" PRODUCTION_DECL+("|")<productions> ";"')
-    def productions_list(self, left, productions):
-        self.allProductions.append((left, productions))
-        return self.allProductions
+    @production('PRODUCTION_DECL -> identifier<left> ":" PRODUCTION_RIGHT+("|")<right> ";"')
+    def production_decl(self, left, right):
+        self.allProductions.append((left, right))
 
-    @production('PRODUCTION_DECL -> ') # Empty
-    @production('PRODUCTION_DECL -> SYMBOL+<symbols>')
-    def production_decl(self, symbols):
+    @production('PRODUCTION_RIGHT -> SYMBOL*<symbols>')
+    def production_right(self, symbols):
         names = list()
         indexes = dict()
         for symbol in symbols:
@@ -247,15 +242,15 @@ class YaccParser(LRParser, ReLexer):
 
         return dict(names=names, action=None, precedence=None)
 
-    @production('PRODUCTION_DECL -> PRODUCTION_DECL<prod> semantic_action<action>')
-    def production_decl_action(self, prod, action):
+    @production('PRODUCTION_RIGHT -> PRODUCTION_RIGHT<prod> semantic_action<action>')
+    def production_right_action(self, prod, action):
         if prod['action'] is not None:
             raise RuntimeError('Duplicate semantic action "%s"' % action)
         prod['action'] = action
         return prod
 
-    @production('PRODUCTION_DECL -> PRODUCTION_DECL<prod> prec_decl identifier<prec>')
-    def production_decl_prec(self, prod, prec):
+    @production('PRODUCTION_RIGHT -> PRODUCTION_RIGHT<prod> prec_decl identifier<prec>')
+    def production_right_prec(self, prod, prec):
         if prod['precedence'] is not None:
             raise RuntimeError('Duplicate precedence declaration "%s"' % prec)
         prod['precedence'] = prec

@@ -608,15 +608,18 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
         class ListSymbol(six.with_metaclass(Singleton, object)):
             __reprval__ = six.u('List(%s, "%s")') % (symbol, six.u('*') if allowEmpty else six.u('+'))
 
-        # Add this first in case it's the start symbol
+        if allowEmpty:
+            clone = prod.cloned()
+            previous = clone.callback
+            def cbEmpty(*args, **kwargs):
+                if name is not None:
+                    kwargs[name] = []
+                return previous(*args, **kwargs)
+            clone.callback = cbEmpty
+            productions.append(clone)
+
         prod.addSymbol(ListSymbol, name=name)
         productions.append(prod)
-
-        if allowEmpty:
-            def cbEmpty(_):
-                return list()
-            listProd = Production(ListSymbol, cbEmpty)
-            productions.append(listProd)
 
         def cbOne(_, item):
             return [item]
