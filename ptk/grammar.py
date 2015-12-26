@@ -147,7 +147,7 @@ class Grammar(six.with_metaclass(_GrammarMeta, object)):
             self.prepare()
 
     @classmethod
-    def prepare(cls): # pylint: disable=R0912
+    def prepare(cls):
         cls.startSymbol = cls._defaultStartSymbol() if cls.startSymbol is None else cls.startSymbol
 
         productions = set()
@@ -156,6 +156,18 @@ class Grammar(six.with_metaclass(_GrammarMeta, object)):
                 raise GrammarError('Duplicate production "%s"' % prod)
             productions.add(prod)
 
+        cls.__allFirsts__ = cls.__computeFirsts()
+
+        logger = logging.getLogger('Grammar')
+        productions = cls.productions()
+        maxWidth = max([len(prod.name) for prod in productions])
+        for prod in productions:
+            logger.debug('%%- %ds -> %%s' % maxWidth, prod.name, ' '.join(prod.right) if prod.right else Epsilon) # pylint: disable=W1201
+
+        cls.__prepared__ = True
+
+    @classmethod
+    def __computeFirsts(cls):
         allFirsts = dict([(symbol, set([symbol])) for symbol in cls.tokenTypes() | set([EOF])])
         while True:
             prev = copy.deepcopy(allFirsts)
@@ -174,15 +186,7 @@ class Grammar(six.with_metaclass(_GrammarMeta, object)):
                             allFirsts.setdefault(nonterminal, set()).add(Epsilon)
             if prev == allFirsts:
                 break
-        cls.__allFirsts__ = allFirsts
-
-        logger = logging.getLogger('Grammar')
-        productions = cls.productions()
-        maxWidth = max([len(prod.name) for prod in productions])
-        for prod in productions:
-            logger.debug('%%- %ds -> %%s' % maxWidth, prod.name, ' '.join(prod.right) if prod.right else Epsilon) # pylint: disable=W1201
-
-        cls.__prepared__ = True
+        return allFirsts
 
     @classmethod
     def _defaultStartSymbol(cls):
