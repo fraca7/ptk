@@ -139,13 +139,13 @@ syntactic sugar; under the hood additional productions are generated:
 
 .. code-block:: none
 
-   A -> B?
+   A -> B?<name>
 
 is equivalent to
 
 .. code-block:: none
 
-   A -> L_B
+   A -> L_B<name>
    L_B ->
    L_B -> B
 
@@ -154,13 +154,13 @@ semantic value of B if the 'L_B -> B' production was applied.
 
 .. code-block:: none
 
-   A -> B*
+   A -> B*<name>
 
 is equivalent to
 
 .. code-block:: none
 
-   A -> L_B
+   A -> L_B<name>
    L_B ->
    L_B -> A
    L_B -> L_B A
