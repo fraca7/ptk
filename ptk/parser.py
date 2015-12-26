@@ -115,7 +115,7 @@ class _Item(object):
     def __repr__(self):
         symbols = list(self.production.right)
         symbols.insert(self.dot, six.u('\u2022') if six.PY3 else six.u('.'))
-        return six.u('%s -> %s (%s)') % (self.production.name, six.u(' ').join(symbols), self.terminal)
+        return six.u('%s -> %s (%s)') % (self.production.name, six.u(' ').join([repr(sym) for sym in symbols]), self.terminal)
 
     def __eq__(self, other):
         return (self.production, self.dot, self.terminal) == (other.production, other.dot, other.terminal)
@@ -228,7 +228,7 @@ class LRParser(Grammar):
             logger.warning('The following tokens are not used: %s', ','.join(sorted(cls.tokenTypes() - usedTokens)))
 
         if reachable != cls.nonterminals():
-            logger.warning('The following nonterminals are not reachable: %s', ','.join(sorted(cls.nonterminals() - reachable)))
+            logger.warning('The following nonterminals are not reachable: %s', ','.join([repr(sym) for sym in sorted(cls.nonterminals() - reachable)]))
 
         # Reductions only need goto entries for nonterminals
         cls._goto = dict([((state, symbol), newState) for (state, symbol), newState in goto.items() if symbol not in cls.tokenTypes()])
@@ -416,19 +416,19 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
 
         # PRODS -> P
         prod = Production('PRODS', cls.PRODS1)
-        prod.addSymbol('P', 'prod')
+        prod.addSymbol('P', 'prodlist')
         cls.__productions__.append(prod)
 
         # PRODS -> PRODS "|" P
         prod = Production('PRODS', cls.PRODS2)
         prod.addSymbol('PRODS', 'prods')
         prod.addSymbol('union')
-        prod.addSymbol('P', 'prod')
+        prod.addSymbol('P', 'prodlist')
         cls.__productions__.append(prod)
 
         # P -> P SYM
         prod = Production('P', cls.P1)
-        prod.addSymbol('P', 'prod')
+        prod.addSymbol('P', 'prodlist')
         prod.addSymbol('SYM', 'sym')
         cls.__productions__.append(prod)
 
@@ -439,6 +439,13 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
         # SYM -> SYMNAME PROPERTIES
         prod = Production('SYM', cls.SYM)
         prod.addSymbol('SYMNAME', 'symname')
+        prod.addSymbol('PROPERTIES', 'properties')
+        cls.__productions__.append(prod)
+
+        # SYM -> SYMNAME repeat PROPERTIES
+        prod = Production('SYM', cls.SYMREP)
+        prod.addSymbol('SYMNAME', 'symname')
+        prod.addSymbol('repeat', 'repeat')
         prod.addSymbol('PROPERTIES', 'properties')
         cls.__productions__.append(prod)
 
@@ -467,11 +474,9 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
 
     def newSentence(self, startSymbol):
         name, prods = startSymbol
-        if name in self.grammarClass.tokenTypes():
-            raise GrammarError('"%s" is a token name and cannot be used as non-terminal' % name)
-
         for prod in prods:
-            prod.name = name
+            if prod.name is None:
+                prod.name = name
         self.grammarClass.__productions__.extend(prods)
 
     # Lexer
@@ -494,6 +499,10 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
 
     @token(r'\|')
     def union(self, tok):
+        pass
+
+    @token(r'\*|\+|\?')
+    def repeat(self, tok):
         pass
 
     @token('[a-zA-Z_][a-zA-Z0-9_]*')
@@ -523,23 +532,79 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
     # Parser
 
     def DECL(self, name, prods):
+        if name in self.grammarClass.tokenTypes():
+            raise GrammarError('"%s" is a token name and cannot be used as non-terminal' % name)
         return (name, prods)
 
-    def PRODS1(self, prod):
-        return [prod]
+    def PRODS1(self, prodlist):
+        return prodlist
 
-    def PRODS2(self, prods, prod):
-        prods.append(prod)
+    def PRODS2(self, prods, prodlist):
+        prods.extend(prodlist)
         return prods
 
-    def P1(self, sym, prod):
-        symbol, properties = sym
-        prod.addSymbol(symbol, name=properties.get('name', None))
-        return prod
+    def P1(self, sym, prodlist):
+        result = list()
+        symbol, properties, repeat = sym
+
+        for prod in prodlist:
+            if prod.name is None:
+                if repeat is None:
+                    prod.addSymbol(symbol, name=properties.get('name', None))
+                    result.append(prod)
+                elif repeat == '?':
+                    self.__addAtMostOne(result, prod, symbol, properties.get('name', None))
+                elif repeat in ['*', '+']:
+                    self.__addList(result, prod, symbol, properties.get('name', None), repeat == '*')
+            else:
+                result.append(prod)
+
+        return result
+
+    def __addAtMostOne(self, productions, prod, symbol, name):
+        clone = prod.cloned()
+        if name is not None:
+            previous = prod.callback
+            def callback(*args, **kwargs):
+                kwargs[name] = None
+                return previous(*args, **kwargs)
+            clone.callback = callback
+        productions.append(clone)
+
+        prod.addSymbol(symbol, name=name)
+        productions.append(prod)
+
+    def __addList(self, productions, prod, symbol, name, allowEmpty):
+        class ListSymbol(six.with_metaclass(Singleton, object)):
+            __reprval__ = six.u('List(%s, "%s")') % (symbol, six.u('*') if allowEmpty else six.u('+'))
+
+        # Add this first in case it's the start symbol
+        prod.addSymbol(ListSymbol, name=name)
+        productions.append(prod)
+
+        if allowEmpty:
+            def cbEmpty(_):
+                return list()
+            listProd = Production(ListSymbol, cbEmpty)
+            productions.append(listProd)
+
+        def cbOne(_, item):
+            return [item]
+        listProd = Production(ListSymbol, cbOne)
+        listProd.addSymbol(symbol, name='item')
+        productions.append(listProd)
+
+        def cbNext(_, items, item):
+            items.append(item)
+            return items
+        listProd = Production(ListSymbol, cbNext)
+        listProd.addSymbol(ListSymbol, name='items')
+        listProd.addSymbol(symbol, name='item')
+        productions.append(listProd)
 
     def P2(self):
         # 'name' is replaced in newSentence()
-        return Production(None, self.callback, priority=self.priority)
+        return [Production(None, self.callback, priority=self.priority)]
 
     def SYMNAME1(self, identifier):
         return identifier
@@ -551,7 +616,10 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
         return name
 
     def SYM(self, symname, properties):
-        return (symname, properties)
+        return (symname, properties, None)
+
+    def SYMREP(self, symname, repeat, properties):
+        return (symname, properties, repeat)
 
     def PROPERTIES1(self):
         return dict()

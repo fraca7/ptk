@@ -7,7 +7,7 @@ import six
 
 
 class PackageInfo(object):
-    version = six.u('1.0.0')
+    version = six.u('1.1.0')
     version_info = map(int, version.split(six.u('.')))
 
     project_name = six.u('ptk')

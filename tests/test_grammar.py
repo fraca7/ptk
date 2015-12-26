@@ -20,6 +20,12 @@ class ProductionParserTestCase(unittest.TestCase):
         self.parser = ProductionParser(None, None, TestGrammar)
         self.grammarClass = TestGrammar
 
+    def assertHasProduction(self, prods, prod):
+        for aProduction in prods:
+            if prod == (aProduction.name, aProduction.right):
+                return
+        self.fail('Production %s not found in %s' % (prod, prods))
+
     def _parse(self, string):
         self.parser.parse(string)
         return self.grammarClass.productions()
@@ -49,6 +55,41 @@ class ProductionParserTestCase(unittest.TestCase):
     def test_order(self):
         prod, = self._parse('test -> A B')
         self.assertEqual(prod.right, ['A', 'B'])
+
+    def test_list(self):
+        prods = self._parse('test -> A*')
+        self.assertEqual(len(prods), 4, repr(prods))
+        for prod in prods:
+            if prod.name == 'test':
+                listSym = prod.right[0]
+                break
+        else:
+            self.fail('Cannot find list symbol in %s' % repr(prods))
+
+        self.assertHasProduction(prods, (listSym, []))
+        self.assertHasProduction(prods, (listSym, ['A']))
+        self.assertHasProduction(prods, (listSym, [listSym, 'A']))
+        self.assertHasProduction(prods, ('test', [listSym]))
+
+    def test_list_not_empty(self):
+        prods = self._parse('test -> A+')
+        self.assertEqual(len(prods), 3, repr(prods))
+        for prod in prods:
+            if prod.name == 'test':
+                listSym = prod.right[0]
+                break
+        else:
+            self.fail('Cannot find list symbol in %s' % repr(prods))
+
+        self.assertHasProduction(prods, (listSym, ['A']))
+        self.assertHasProduction(prods, (listSym, [listSym, 'A']))
+        self.assertHasProduction(prods, ('test', [listSym]))
+
+    def test_atmostone(self):
+        prods = self._parse('test -> A?')
+        self.assertEqual(len(prods), 2)
+        self.assertHasProduction(prods, ('test', []))
+        self.assertHasProduction(prods, ('test', ['A']))
 
 
 class ProductionTestCase(unittest.TestCase):

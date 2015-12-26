@@ -106,3 +106,10 @@ Code samples
 The *samples* subdirectory in the source tree contains the
 aforementioned calculator and a script that generates a skeleton
 Python file from a Yacc or Bison grammar file.
+
+Changelog
+---------
+
+Version 1.1.0:
+
+- Added repeat operators ('*', '+', '?') in production syntax.

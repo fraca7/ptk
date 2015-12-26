@@ -60,6 +60,12 @@ class Production(object):
             self.__ids[len(self.right)] = name
         self.right.append(identifier)
 
+    def cloned(self):
+        prod = Production(self.name, self.callback, self.__priority)
+        prod.right = list(self.right)
+        prod.__ids = dict(self.__ids) # pylint: disable=W0212
+        return prod
+
     def apply(self, grammar, args):
         """
         Invokes the associated callback
@@ -162,7 +168,7 @@ class Grammar(six.with_metaclass(_GrammarMeta, object)):
         productions = cls.productions()
         maxWidth = max([len(prod.name) for prod in productions])
         for prod in productions:
-            logger.debug('%%- %ds -> %%s' % maxWidth, prod.name, ' '.join(prod.right) if prod.right else Epsilon) # pylint: disable=W1201
+            logger.debug('%%- %ds -> %%s' % maxWidth, prod.name, ' '.join([repr(name) for name in prod.right]) if prod.right else Epsilon) # pylint: disable=W1201
 
         cls.__prepared__ = True
 

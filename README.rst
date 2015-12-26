@@ -53,8 +53,8 @@ Using pip::
 
 From source::
 
-  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.0.0.tar.gz
-  $ tar xjf ptk-1.0.0.tar.bz2; cd ptk-1.0.0
+  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.1.0.tar.gz
+  $ tar xjf ptk-1.1.0.tar.bz2; cd ptk-1.1.0
   $ sudo python ./setup.py install
 
 Sample usage
@@ -106,3 +106,10 @@ Code samples
 The *samples* subdirectory in the source tree contains the
 aforementioned calculator and a script that generates a skeleton
 Python file from a Yacc or Bison grammar file.
+
+Changelog
+---------
+
+Version 1.1.0:
+
+- Added repeat operators ('*', '+', '?') in production syntax.

@@ -129,6 +129,45 @@ A litteral token name may appear in a production, between double quotes. This al
 
 Litteral tokens may be named as well.
 
+Repeat operators
+^^^^^^^^^^^^^^^^
+
+A nonterminal in the right side of a production may be immediately
+followed by a repeat operator among "*", "+" and "?", which have the
+same meaning as in regular expressions. Note that this is only
+syntactic sugar; under the hood additional productions are generated:
+
+.. code-block:: none
+
+   A -> B?
+
+is equivalent to
+
+.. code-block:: none
+
+   A -> L_B
+   L_B ->
+   L_B -> B
+
+The semantic value is None if the empty production was applied, or the
+semantic value of B if the 'L_B -> B' production was applied.
+
+.. code-block:: none
+
+   A -> B*
+
+is equivalent to
+
+.. code-block:: none
+
+   A -> L_B
+   L_B ->
+   L_B -> A
+   L_B -> L_B A
+
+The semantic value is a list of semantic values for B. '+' works the
+same way except for the empty production, so the list cannot be empty.
+
 Wrapping it up
 --------------
 
