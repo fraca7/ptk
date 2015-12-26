@@ -10,9 +10,11 @@ import sys
 import six
 import collections
 import codecs
+import re
 
 from ptk.parser import production, LRParser, ParseError
 from ptk.lexer import token, ReLexer, EOF
+from ptk.regex import buildRegex, DeadState
 
 
 Symbol = collections.namedtuple('Symbol', ('name', 'argname'))
@@ -56,6 +58,18 @@ class Options(object):
         return Options(opts), args
 
 
+class NullToken(object):
+    def __init__(self, endMarker):
+        self.__rx = buildRegex('.*%s' % re.escape(endMarker))
+
+    def feed(self, char):
+        try:
+            if self.__rx.feed(char):
+                return None, None
+        except DeadState:
+            return None, None
+
+
 class YaccParser(LRParser, ReLexer):
     def __init__(self, options, stream):
         self.stream = stream
@@ -72,56 +86,19 @@ class YaccParser(LRParser, ReLexer):
 
     @token(r'%\{', types=[])
     def c_decl(self, tok):
-        class IgnoreCDecl(object):
-            def __init__(self):
-                self.state = 0
-            def feed(self, char):
-                if self.state == 0:
-                    if char == '%':
-                        self.state = 1
-                elif self.state == 1:
-                    if char == '}':
-                        return None, None # Token type None -> ignored
-                    elif char != '%':
-                        self.state = 0
-        self.setConsumer(IgnoreCDecl())
+        self.setConsumer(NullToken('%}'))
 
     @token(r'/\*', types=[])
     def comment(self, tok):
-        class Comment(object):
-            def __init__(self):
-                self.state = 0
-                self.value = six.StringIO()
-
-            def feed(self, char):
-                if self.state == 0:
-                    if char == '*':
-                        self.state = 1
-                    else:
-                        self.value.write(char)
-                elif self.state == 1:
-                    if char == '/':
-                        return None, None # Ignore
-                    elif char == '*':
-                        self.value.write('*')
-                    else:
-                        self.value.write(char)
-                        self.state = 0
-        self.setConsumer(Comment())
+        self.setConsumer(NullToken('*/'))
 
     @token(r'%union\s*{', types=[]) # Hum, no LF possible before {
     def union(self, tok):
-        class Union(object):
-            def feed(self, char):
-                if char == '}':
-                    return None, None
-        self.setConsumer(Union())
+        self.setConsumer(NullToken('}'))
 
     @token(r'%%')
     def part_sep(self, tok):
         self.state += 1
-        if self.state == 1:
-            six.print_()
         if self.state == 2:
             # Ignore C code after last %%
             class IgnoreCCode(object):
