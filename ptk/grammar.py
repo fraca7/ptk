@@ -147,7 +147,7 @@ class Grammar(six.with_metaclass(_GrammarMeta, object)):
             self.prepare()
 
     @classmethod
-    def prepare(cls):
+    def prepare(cls): # pylint: disable=R0912
         cls.startSymbol = cls._defaultStartSymbol() if cls.startSymbol is None else cls.startSymbol
 
         productions = set()
@@ -180,7 +180,7 @@ class Grammar(six.with_metaclass(_GrammarMeta, object)):
         productions = cls.productions()
         maxWidth = max([len(prod.name) for prod in productions])
         for prod in productions:
-            logger.debug('%%- %ds -> %%s' % maxWidth, prod.name, ' '.join(prod.right) if prod.right else Epsilon)
+            logger.debug('%%- %ds -> %%s' % maxWidth, prod.name, ' '.join(prod.right) if prod.right else Epsilon) # pylint: disable=W1201
 
         cls.__prepared__ = True
 
@@ -241,3 +241,8 @@ class Grammar(six.with_metaclass(_GrammarMeta, object)):
         else:
             first.add(Epsilon)
         return first
+
+    @classmethod
+    def tokenTypes(cls):
+        # Shut up pylint
+        return super(Grammar, cls).tokenTypes() # pylint: disable=E1101

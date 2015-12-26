@@ -247,11 +247,11 @@ class LRParser(Grammar):
                 if item.shouldReduce():
                     action = _Reduce(item)
                     reachable.add(item.production.name)
-                    cls.__addReduceAction(logger, state, item.terminal, action)
+                    cls.__addReduceAction(state, item.terminal, action)
                 else:
                     symbol = item.production.right[item.dot]
                     if symbol in cls.tokenTypes():
-                        cls.__addShiftAction(logger, state, symbol, _Shift(goto[(state, symbol)]))
+                        cls.__addShiftAction(state, symbol, _Shift(goto[(state, symbol)]))
 
         cls.__resolveConflicts(logger)
 
@@ -352,11 +352,11 @@ class LRParser(Grammar):
                 return action2
 
     @classmethod
-    def __addReduceAction(cls, logger, state, symbol, action):
+    def __addReduceAction(cls, state, symbol, action):
         cls.__actions__.setdefault((state, symbol), list()).append(action)
 
     @classmethod
-    def __addShiftAction(cls, logger, state, symbol, action):
+    def __addShiftAction(cls, state, symbol, action):
         for existing in cls.__actions__.get((state, symbol), list()):
             if isinstance(existing, _Shift):
                 return

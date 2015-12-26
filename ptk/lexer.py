@@ -78,6 +78,9 @@ class LexerBase(six.with_metaclass(_LexerMeta, object)):
 
     Token = RegexTokenizer.Token
 
+    # Shut up pychecker. Those are actually set by the metaclass.
+    __tokens__ = ()
+
     class _MutableToken(object):
         def __init__(self, type_, value):
             self.type = type_
@@ -113,7 +116,7 @@ class LexerBase(six.with_metaclass(_LexerMeta, object)):
         """
         Advances the current position by *count* lines.
         """
-        col, row = self.__pos
+        _, row = self.__pos
         self.__pos = _LexerPosition(0, row + count)
 
     @staticmethod
@@ -235,9 +238,9 @@ class ReLexer(LexerBase):
                 match = None
                 matchlen = 0
                 for rx, callback, defaultType in self.__regexes:
-                    mt = rx.search(string[pos:])
-                    if mt:
-                        value = mt.group(0)
+                    mtc = rx.search(string[pos:])
+                    if mtc:
+                        value = mtc.group(0)
                         if len(value) > matchlen:
                             match = value, callback, defaultType
                             matchlen = len(value)
@@ -364,7 +367,7 @@ class ProgressiveLexer(LexerBase):
         match = type(self.__currentMatch[0][0])().join([char for char, pos in self.__currentMatch[:self.__maxPos]]) # byte or unicode
         remain = self.__currentMatch[self.__maxPos:]
         self.restartLexer(False)
-        for rx, callback, defaultType in self._allTokens()[1]:
+        for _, callback, defaultType in self._allTokens()[1]:
             if callback in matches:
                 tok = self._MutableToken(defaultType, match)
                 callback(self, tok)
