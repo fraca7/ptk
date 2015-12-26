@@ -225,18 +225,11 @@ class YaccParser(LRParser, ReLexer):
 
     # Productions; we assume there's always at least one
 
-    @production('PRODUCTIONS_LIST -> identifier<left> ":" PRODUCTION_ALTERNATIVES_LIST<productions> ";"')
-    @production('PRODUCTIONS_LIST -> PRODUCTIONS_LIST identifier<left> ":" PRODUCTION_ALTERNATIVES_LIST<productions> ";"')
+    @production('PRODUCTIONS_LIST -> identifier<left> ":" PRODUCTION_DECL+("|")<productions> ";"')
+    @production('PRODUCTIONS_LIST -> PRODUCTIONS_LIST identifier<left> ":" PRODUCTION_DECL+("|")<productions> ";"')
     def productions_list(self, left, productions):
         self.allProductions.append((left, productions))
         return self.allProductions
-
-    @production('PRODUCTION_ALTERNATIVES_LIST -> PRODUCTION_DECL<prod>')
-    @production('PRODUCTION_ALTERNATIVES_LIST -> PRODUCTION_ALTERNATIVES_LIST<prodList> "|" PRODUCTION_DECL<prod>')
-    def next_production(self, prod, prodList=None):
-        prodList = [] if prodList is None else prodList
-        prodList.append(prod)
-        return prodList
 
     @production('PRODUCTION_DECL -> ') # Empty
     @production('PRODUCTION_DECL -> SYMBOL+<symbols>')

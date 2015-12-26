@@ -8,15 +8,17 @@ from ptk.parser import ProductionParser
 
 
 class GrammarUnderTest(Grammar):
+    tokens = set()
+
     @classmethod
     def tokenTypes(cls):
-        return set()
+        return cls.tokens
 
 
 class ProductionParserTestCase(unittest.TestCase):
     def setUp(self):
         class TestGrammar(GrammarUnderTest):
-            pass
+            tokens = set()
         self.parser = ProductionParser(None, None, TestGrammar)
         self.grammarClass = TestGrammar
 
@@ -56,15 +58,16 @@ class ProductionParserTestCase(unittest.TestCase):
         prod, = self._parse('test -> A B')
         self.assertEqual(prod.right, ['A', 'B'])
 
+    def _findListSym(self, prods):
+        for prod in prods:
+            if prod.name == 'test':
+                return prod.right[0]
+        self.fail('Cannot find list symbol in %s' % repr(prods))
+
     def test_list(self):
         prods = self._parse('test -> A*')
         self.assertEqual(len(prods), 4, repr(prods))
-        for prod in prods:
-            if prod.name == 'test':
-                listSym = prod.right[0]
-                break
-        else:
-            self.fail('Cannot find list symbol in %s' % repr(prods))
+        listSym = self._findListSym(prods)
 
         self.assertHasProduction(prods, (listSym, []))
         self.assertHasProduction(prods, (listSym, ['A']))
@@ -73,16 +76,30 @@ class ProductionParserTestCase(unittest.TestCase):
 
     def test_list_not_empty(self):
         prods = self._parse('test -> A+')
+        listSym = self._findListSym(prods)
         self.assertEqual(len(prods), 3, repr(prods))
-        for prod in prods:
-            if prod.name == 'test':
-                listSym = prod.right[0]
-                break
-        else:
-            self.fail('Cannot find list symbol in %s' % repr(prods))
 
         self.assertHasProduction(prods, (listSym, ['A']))
         self.assertHasProduction(prods, (listSym, [listSym, 'A']))
+        self.assertHasProduction(prods, ('test', [listSym]))
+
+    def test_list_with_separator(self):
+        prods = self._parse('test -> A+(pipe)')
+        self.assertEqual(len(prods), 3, repr(prods))
+        listSym = self._findListSym(prods)
+
+        self.assertHasProduction(prods, (listSym, ['A']))
+        self.assertHasProduction(prods, (listSym, [listSym, 'pipe', 'A']))
+        self.assertHasProduction(prods, ('test', [listSym]))
+
+    def test_list_with_litteral_separator(self):
+        self.grammarClass.tokens.add('|')
+        prods = self._parse('test -> A+("|")')
+        self.assertEqual(len(prods), 3, repr(prods))
+        listSym = self._findListSym(prods)
+
+        self.assertHasProduction(prods, (listSym, ['A']))
+        self.assertHasProduction(prods, (listSym, [listSym, '|', 'A']))
         self.assertHasProduction(prods, ('test', [listSym]))
 
     def test_atmostone(self):

@@ -240,6 +240,29 @@ class NonEmptyListTestCase(unittest.TestCase):
         self.assertEqual(self.seen, ['a', 'b', 'c'])
 
 
+class SeparatorListTestCase(unittest.TestCase):
+    def setUp(self):
+        class Parser(LRParser, ProgressiveLexer):
+            def __init__(self, testCase):
+                super(Parser, self).__init__()
+                self.testCase = testCase
+            @token('[a-z]+')
+            def identifier(self, tok):
+                pass
+            @production('L -> identifier+("|")<tokens>')
+            def idlist(self, tokens):
+                return tokens
+            def newSentence(self, symbol):
+                self.testCase.seen = symbol
+
+        self.parser = Parser(self)
+        self.seen = None
+
+    def test_items(self):
+        self.parser.parse('a | b | c')
+        self.assertEqual(self.seen, ['a', 'b', 'c'])
+
+
 class AtMostOneTestCase(unittest.TestCase):
     def setUp(self):
         class Parser(LRParser, ProgressiveLexer):

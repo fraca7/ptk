@@ -404,7 +404,7 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
         super(ProductionParser, self).__init__()
 
     @classmethod
-    def prepare(cls, **kwargs):
+    def prepare(cls, **kwargs): # pylint: disable=R0915
         # Obviously cannot use @production here
 
         # DECL -> identifier "->" PRODS
@@ -446,6 +446,26 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
         prod = Production('SYM', cls.SYMREP)
         prod.addSymbol('SYMNAME', 'symname')
         prod.addSymbol('repeat', 'repeat')
+        prod.addSymbol('PROPERTIES', 'properties')
+        cls.__productions__.append(prod)
+
+        # SYM -> SYMNAME repeat lparen identifier rparen PROPERTIES
+        prod = Production('SYM', cls.SYMREP)
+        prod.addSymbol('SYMNAME', 'symname')
+        prod.addSymbol('repeat', 'repeat')
+        prod.addSymbol('lparen')
+        prod.addSymbol('identifier', 'separator')
+        prod.addSymbol('rparen')
+        prod.addSymbol('PROPERTIES', 'properties')
+        cls.__productions__.append(prod)
+
+        # SYM -> SYMNAME repeat lparen litteral rparen PROPERTIES
+        prod = Production('SYM', cls.SYMREP_LIT)
+        prod.addSymbol('SYMNAME', 'symname')
+        prod.addSymbol('repeat', 'repeat')
+        prod.addSymbol('lparen')
+        prod.addSymbol('litteral', 'separator')
+        prod.addSymbol('rparen')
         prod.addSymbol('PROPERTIES', 'properties')
         cls.__productions__.append(prod)
 
@@ -505,6 +525,14 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
     def repeat(self, tok):
         pass
 
+    @token(r'\(')
+    def lparen(self, tok):
+        pass
+
+    @token(r'\)')
+    def rparen(self, tok):
+        pass
+
     @token('[a-zA-Z_][a-zA-Z0-9_]*')
     def identifier(self, tok):
         pass
@@ -545,7 +573,7 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
 
     def P1(self, sym, prodlist):
         result = list()
-        symbol, properties, repeat = sym
+        symbol, properties, repeat, sep = sym
 
         for prod in prodlist:
             if prod.name is None:
@@ -553,9 +581,11 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
                     prod.addSymbol(symbol, name=properties.get('name', None))
                     result.append(prod)
                 elif repeat == '?':
+                    if sep is not None:
+                        raise GrammarError('A separator makes no sense for "?"')
                     self.__addAtMostOne(result, prod, symbol, properties.get('name', None))
                 elif repeat in ['*', '+']:
-                    self.__addList(result, prod, symbol, properties.get('name', None), repeat == '*')
+                    self.__addList(result, prod, symbol, properties.get('name', None), repeat == '*', sep)
             else:
                 result.append(prod)
 
@@ -574,7 +604,7 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
         prod.addSymbol(symbol, name=name)
         productions.append(prod)
 
-    def __addList(self, productions, prod, symbol, name, allowEmpty):
+    def __addList(self, productions, prod, symbol, name, allowEmpty, sep):
         class ListSymbol(six.with_metaclass(Singleton, object)):
             __reprval__ = six.u('List(%s, "%s")') % (symbol, six.u('*') if allowEmpty else six.u('+'))
 
@@ -599,6 +629,8 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
             return items
         listProd = Production(ListSymbol, cbNext)
         listProd.addSymbol(ListSymbol, name='items')
+        if sep is not None:
+            listProd.addSymbol(sep)
         listProd.addSymbol(symbol, name='item')
         productions.append(listProd)
 
@@ -616,10 +648,15 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
         return name
 
     def SYM(self, symname, properties):
-        return (symname, properties, None)
+        return (symname, properties, None, None)
 
-    def SYMREP(self, symname, repeat, properties):
-        return (symname, properties, repeat)
+    def SYMREP(self, symname, repeat, properties, separator=None):
+        return (symname, properties, repeat, separator)
+
+    def SYMREP_LIT(self, symname, repeat, properties, separator):
+        if separator not in self.grammarClass.tokenTypes():
+            self.grammarClass.addTokenType(separator, lambda s, tok: None, re.escape(separator), None)
+        return self.SYMREP(symname, repeat, properties, separator)
 
     def PROPERTIES1(self):
         return dict()
