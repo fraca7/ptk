@@ -134,20 +134,8 @@ class YaccParser(LRParser, ReLexer):
     def ignore(char):
         return char in [' ', '\t', '\n']
 
-    @token(r'%token')
-    def token_decl(self, tok):
-        pass
-
     @token(r'%(left|right|nonassoc)')
     def assoc_decl(self, tok):
-        pass
-
-    @token(r'%prec')
-    def prec_decl(self, tok):
-        pass
-
-    @token(r'%start')
-    def start_decl(self, tok):
         pass
 
     @token(r'[a-zA-Z_][a-zA-Z0-9_]*')
@@ -209,7 +197,7 @@ class YaccParser(LRParser, ReLexer):
 
     # Tokens, start symbol, etc
 
-    @production('META_DECLARATION -> token_decl identifier+<tokens>')
+    @production('META_DECLARATION -> "%token" identifier+<tokens>')
     def token_declaration(self, tokens):
         self.allTokens.extend(tokens)
 
@@ -217,7 +205,7 @@ class YaccParser(LRParser, ReLexer):
     def assoc_declaration(self, assoc, tokens):
         self.precedences.append((assoc, tokens))
 
-    @production('META_DECLARATION -> start_decl identifier<name>')
+    @production('META_DECLARATION -> "%start" identifier<name>')
     def start_declaration(self, name):
         self.yaccStartSymbol = name
 
@@ -249,7 +237,7 @@ class YaccParser(LRParser, ReLexer):
         prod['action'] = action
         return prod
 
-    @production('PRODUCTION_RIGHT -> PRODUCTION_RIGHT<prod> prec_decl identifier<prec>')
+    @production('PRODUCTION_RIGHT -> PRODUCTION_RIGHT<prod> "%prec" identifier<prec>')
     def production_right_prec(self, prod, prec):
         if prod['precedence'] is not None:
             raise RuntimeError('Duplicate precedence declaration "%s"' % prec)
