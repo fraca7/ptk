@@ -54,8 +54,8 @@ Using pip::
 
 From source::
 
-  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.1.0.tar.gz
-  $ tar xjf ptk-1.1.0.tar.bz2; cd ptk-1.1.0
+  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.2.0.tar.gz
+  $ tar xjf ptk-1.2.0.tar.bz2; cd ptk-1.2.0
   $ sudo python ./setup.py install
 
 Sample usage
