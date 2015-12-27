@@ -65,6 +65,8 @@ Lexical analysis
    :members:
    :member-order: bysource
 
+.. autoclass:: ptk.async_lexer.AsyncLexer
+
 .. py:data:: EOF
 
    This is a singleton used to indicate end of stream. It may be used
