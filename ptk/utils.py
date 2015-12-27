@@ -38,3 +38,9 @@ class Singleton(type):
         cls.__len__ = lambda self: len(self.__reprval__)
         cls.__hash__ = lambda self: hash(id(self))
         return functools.total_ordering(cls)()
+
+
+def callbackByName(funcName):
+    def _wrapper(instance, *args, **kwargs):
+        return getattr(instance, funcName)(*args, **kwargs)
+    return _wrapper

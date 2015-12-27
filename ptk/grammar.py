@@ -16,7 +16,7 @@ import inspect
 import logging
 
 from ptk.lexer import EOF, _LexerMeta
-from ptk.utils import memoize, Singleton
+from ptk.utils import memoize, Singleton, callbackByName
 
 
 class Epsilon(six.with_metaclass(Singleton, object)):
@@ -120,7 +120,7 @@ class _GrammarMeta(_LexerMeta):
             klass = super(_GrammarMeta, metacls).__new__(metacls, name, bases, attrs)
             for func, string, priority in _PRODREGISTER:
                 from ptk.parser import ProductionParser
-                parser = ProductionParser(func, priority, klass)
+                parser = ProductionParser(callbackByName(func.__name__), priority, klass)
                 parser.parse(string)
             return klass
         finally:
@@ -129,6 +129,8 @@ class _GrammarMeta(_LexerMeta):
 
 def production(prod, priority=None):
     def _wrap(func):
+        if any([func.__name__ == aFunc.__name__ and func != aFunc for aFunc, _, _ in _PRODREGISTER]):
+            raise TypeError('Duplicate production method name "%s"' % func.__name__)
         _PRODREGISTER.append((func, prod, priority))
         return func
     return _wrap

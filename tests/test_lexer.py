@@ -269,26 +269,51 @@ class ReLexerConsumerTestCase(LexerConsumerTestCaseMixin, ReLexerTestCase):
 
 
 class LexerDuplicateTokenNameTestCaseMixin(object):
-    def setUp(self):
-        super(LexerDuplicateTokenNameTestCaseMixin, self).setUp()
-        class TestedLexer(LexerUnderTestMixin, self.lexerClass):
-            @token('a')
-            def ID(self, tok):
-                tok.value = 1
-            @token('b')
-            def ID(self, tok):
-                tok.value = 2
-        self.lexer = TestedLexer(self)
-
-    def test_distinct(self):
-        self.assertEqual(self.doLex('ab'), (('ID', 1), ('ID', 2)))
-
+    def test_dup(self):
+        try:
+            class TestedLexer(LexerUnderTestMixin, self.lexerClass):
+                @token('a')
+                def ID(self, tok):
+                    pass
+                @token('b')
+                def ID(self, tok):
+                    pass
+        except TypeError:
+            pass
+        else:
+            self.fail()
 
 class ProgressiveLexerDuplicateTokenNameTestCase(LexerDuplicateTokenNameTestCaseMixin, ProgressiveLexerTestCase):
     pass
 
 
 class ReLexerDuplicateTokenNameTestCase(LexerDuplicateTokenNameTestCaseMixin, ReLexerTestCase):
+    pass
+
+
+class LexerInheritanceTestCaseMixin(object):
+    def setUp(self):
+        super(LexerInheritanceTestCaseMixin, self).setUp()
+        class TestedLexer(LexerUnderTestMixin, self.lexerClass):
+            @token('[0-9]')
+            def digit(self, tok):
+                pass
+
+        class ChildLexer(TestedLexer):
+            def digit(self, tok):
+                tok.value = int(tok.value)
+
+        self.lexer = ChildLexer(self)
+
+    def test_inherit(self):
+        self.assertEqual(self.doLex('4'), (('digit', 4),))
+
+
+class ProgressiveLexerInheritanceTestCase(LexerInheritanceTestCaseMixin, ProgressiveLexerTestCase):
+    pass
+
+
+class ReLexerInheritanceTestCase(LexerInheritanceTestCaseMixin, ReLexerTestCase):
     pass
 
 

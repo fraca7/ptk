@@ -55,18 +55,14 @@ The productions specified through the :py:func:`production` decorator must be sp
 
    class Parser(LRParser, ReLexer):
        @production('E -> E plus E')
-       def binaryop(self):
+       def binaryop_sum(self):
            pass
 
         @production('E -> E minus E')
-	def binaryop(self):
+	def binaryop_minus(self):
 	    pass
 
 Here non terminal symbols are uppercase and terminals (token types) are lowercase, but this is only a convention.
-
-.. note::
-
-   Yes, you can use the same method name for different semantic actions. Don't abuse it.
 
 When you don't need separate semantic actions you can group several productions by using either the '|' symbol:
 
@@ -150,7 +146,7 @@ is equivalent to
    A -> B
 
 The semantic value is None if the empty production was applied, or the
-semantic value of B if the 'L_B -> B' production was applied.
+semantic value of B if the "A -> B" production was applied.
 
 .. code-block:: none
 
