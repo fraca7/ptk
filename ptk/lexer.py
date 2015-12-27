@@ -9,10 +9,10 @@ import re
 import collections
 
 from ptk.regex import buildRegex, DeadState, RegexTokenizer
-from ptk.utils import Singleton
+from ptk.utils import Singleton, callbackByName
 
 
-# In Python 3 we'd use __prepare__ and a multi-valued ordered dict...
+# In Python 3 we'd use __prepare__ and an ordered dict...
 _TOKREGISTER = list()
 
 
@@ -23,7 +23,7 @@ class _LexerMeta(type):
             attrs['__tokens__'] = (set(), list()) # Set of token names, list of (rx, callback, defaultType)
             klass = super(_LexerMeta, metacls).__new__(metacls, name, bases, attrs)
             for func, rx, toktypes in _TOKREGISTER:
-                klass.addTokenType(func.__name__, func, rx, toktypes)
+                klass.addTokenType(func.__name__, callbackByName(func.__name__), rx, toktypes)
             return klass
         finally:
             _TOKREGISTER = list()
@@ -31,6 +31,8 @@ class _LexerMeta(type):
 
 def token(rx, types=None):
     def _wrap(func):
+        if any([func.__name__ == aFunc.__name__ and func != aFunc for aFunc, _, _ in _TOKREGISTER]):
+            raise TypeError('Duplicate token method name "%s"' % func.__name__)
         _TOKREGISTER.append((func, rx, types))
         return func
     return _wrap

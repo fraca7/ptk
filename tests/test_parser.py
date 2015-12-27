@@ -298,5 +298,31 @@ class AtMostOneTestCase(unittest.TestCase):
             self.fail('Got %s' % self.seen)
 
 
+class InheritanceTestCase(unittest.TestCase):
+    def setUp(self):
+        class Parser(LRParser, ProgressiveLexer):
+            def __init__(self):
+                self.seen = None
+                super(Parser, self).__init__()
+            @token('[0-9]')
+            def digit(self, tok):
+                tok.value = int(tok.value)
+            @production('E -> digit<d>')
+            def start(self, d):
+                pass
+            def newSentence(self, symbol):
+                self.seen = symbol
+
+        class Child(Parser):
+            def start(self, d):
+                return d
+
+        self.parser = Child()
+
+    def test_override(self):
+        self.parser.parse('4')
+        self.assertEqual(self.parser.seen, 4)
+
+
 if __name__ == '__main__':
     unittest.main()
