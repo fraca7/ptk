@@ -7,6 +7,7 @@ import six
 import inspect
 import re
 import collections
+import sys
 
 from ptk.regex import buildRegex, DeadState, RegexTokenizer
 from ptk.utils import Singleton, callbackByName
@@ -99,6 +100,7 @@ class LexerBase(six.with_metaclass(_LexerMeta, object)):
     def restartLexer(self, resetPos=True):
         if resetPos:
             self.__pos = _LexerPosition(0, 1)
+            self._input = list()
         self.__consumer = None
 
     def position(self):
@@ -277,7 +279,8 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
     progressive fashion; just call the
     :py:func:`ProgressiveLexer.feed` method with whatever bytes are
     available when they're available. Useful for asynchronous
-    contexts.
+    contexts. Starting with Python 3.5 there is also an asynchronous
+    version, see :py:class:`AsyncLexer`.
 
     This is **slow as hell**.
     """
@@ -287,6 +290,7 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
         self.__matches = list()
         self.__maxPos = 0
         self.__state = 0
+        self._input = list()
         super(ProgressiveLexer, self).restartLexer(resetPos=resetPos)
 
     def parse(self, string):
@@ -296,12 +300,18 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
             self.feed(char)
         self.feed(EOF)
 
-    def feed(self, char, charPos=None): # pylint: disable=R0912,R0915
+    def feed(self, char, charPos=None):
         """
         Handle a single input character. When you're finished, call
         this with EOF as argument.
         """
+        self._input.append((char, charPos))
+        while self._input:
+            char, charPos = self._input.pop(0)
+            for tok in self._feed(char, charPos):
+                self.newToken(tok)
 
+    def _feed(self, char, charPos): # pylint: disable=R0912,R0915
         if char == '\n':
             self.advanceLine()
         else:
@@ -312,14 +322,14 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
             if tok is not None:
                 self.setConsumer(None)
                 if tok[0] is not None:
-                    self.newToken(self.Token(*tok))
+                    yield self.Token(*tok)
             return
 
         try:
             if char is EOF:
                 if self.__state == 0:
                     self.restartLexer()
-                    self.newToken(EOF)
+                    yield EOF
                     return
                 self.__maxPos = max(self.__maxPos, max(pos[0] for regex, callback, defaultType, pos in self.__currentState))
                 if self.__maxPos == 0 and self.__currentMatch:
@@ -362,11 +372,13 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
             self.restartLexer()
             raise
 
-        self.__finalizeMatch()
+        tok = self.__finalizeMatch()
+        if tok is not None:
+            yield tok
 
         if char is EOF:
             self.restartLexer()
-            self.newToken(EOF)
+            yield EOF
 
     def __finalizeMatch(self):
         # First declared token method
@@ -374,13 +386,15 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
         match = type(self.__currentMatch[0][0])().join([char for char, pos in self.__currentMatch[:self.__maxPos]]) # byte or unicode
         remain = self.__currentMatch[self.__maxPos:]
         self.restartLexer(False)
+        self._input.extend(remain)
         for _, callback, defaultType in self._allTokens()[1]:
             if callback in matches:
                 tok = self._MutableToken(defaultType, match)
                 callback(self, tok)
                 if tok.type is None or self.consumer() is not None:
                     break
-                self.newToken(tok.token())
-                break
-        for char, pos in remain:
-            self.feed(char, charPos=pos)
+                return tok.token()
+
+
+if sys.version_info >= (3, 5):
+    from ptk.async_lexer import AsyncLexer # pylint: disable=W0611

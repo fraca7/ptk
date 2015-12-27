@@ -5,6 +5,7 @@ import base, unittest
 from ptk.grammar import Production, GrammarError, Grammar, production
 from ptk.lexer import token
 from ptk.parser import ProductionParser
+from ptk.utils import callbackByName
 
 
 class GrammarUnderTest(Grammar):
@@ -21,6 +22,10 @@ class GrammarUnderTest(Grammar):
     @classmethod
     def tokenTypes(cls):
         return cls.tokens
+
+    @classmethod
+    def _createProductionParser(cls, name, priority):
+        return ProductionParser(callbackByName(name), priority, cls)
 
 
 class ProductionParserTestCase(unittest.TestCase):
@@ -141,7 +146,8 @@ class ProductionTestCase(unittest.TestCase):
             self.fail()
 
     def test_kwargs(self):
-        self.production.apply(self, [1, 2])
+        cb, kwargs = self.production.apply([1, 2])
+        cb(self, **kwargs)
         self.assertEqual(self.calls, [{'b': 1}])
 
 

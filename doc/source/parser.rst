@@ -41,6 +41,8 @@ Syntactic analysis
    :members:
    :member-order: bysource
 
+.. autoclass:: ptk.async_parser.AsyncLRParser
+
 .. _production-syntax:
 
 Production syntax
@@ -237,3 +239,108 @@ Conflict resolution rules
 =========================
 
 Conflict resolution rules are the same as those used by Yacc/Bison. A shift/reduce conflict is resolved by choosing to shift. A reduce/reduce conflict is resolved by choosing the reduction associated with the first declared production. :py:func:`leftAssoc`, :py:func:`rightAssoc`, :py:func:`nonAssoc` and the *priority* argument to :py:func:`production` allows you to explicitely disambiguate.
+
+Asynchronous lexer/parser
+=========================
+
+The :py:class:`AsyncLexer` and :py:class:`AsyncLRParser` classes allow
+you to parse an input stream asynchronously. Since this uses the new
+asynchronous method syntax introduced in Python 3.5, it's only
+available with this version of Python.
+
+The basic idea is that the production methods are asynchronous. Feed
+the input stream one byte/char at a time by awaiting on
+:py:func:`AsyncLexer.asyncFeed`. When a token has been recognized
+unambiguously, this will in turn await on
+:py:func:`AsyncParser.asyncNewToken`. Semantic actions may then be
+awaited on as a result.
+
+The samples directory contains the following example of an
+asynchronous parser:
+
+.. code-block:: python
+
+    #!/usr/bin/env python
+    # -*- coding: UTF-8 -*-
+    
+    """
+    
+    Four operations calculator, asynchronous. Due to various buffering
+    problems you probably won't see what's the point unless you force
+    stdin to be noninteractive, e.g.
+    
+    $ echo '3*4+6' | python3 ./async_calc.py
+    
+    """
+    
+    import six, operator, os, asyncio, sys, codecs
+    
+    from ptk.lexer import token, AsyncLexer, EOF
+    from ptk.parser import production, leftAssoc, AsyncLRParser, ParseError
+    
+    
+    @leftAssoc('+', '-')
+    @leftAssoc('*', '/')
+    class Parser(AsyncLRParser, AsyncLexer):
+        async def asyncNewSentence(self, result):
+            six.print_('== Result:', result)
+    
+        # Lexer
+        def ignore(self, char):
+            return char in [' ', '\t']
+    
+        @token(r'[1-9][0-9]*')
+        def number(self, tok):
+            tok.value = int(tok.value)
+    
+        # Parser
+    
+        @production('E -> "-" E<value>', priority='*')
+        async def minus(self, value):
+            six.print_('== Neg: - %d' % value)
+            return -value
+    
+        @production('E -> "(" E<value> ")"')
+        async def paren(self, value):
+            return value
+    
+        @production('E -> number<number>')
+        async def litteral(self, number):
+            return number
+    
+        @production('E -> E<left> "+"<op> E<right>')
+        @production('E -> E<left> "-"<op> E<right>')
+        @production('E -> E<left> "*"<op> E<right>')
+        @production('E -> E<left> "/"<op> E<right>')
+        async def binaryop(self, left, op, right):
+            six.print_('Binary operation: %s %s %s' % (left, op, right))
+            return {
+                '+': operator.add,
+                '-': operator.sub,
+                '*': operator.mul,
+                '/': operator.floordiv
+                }[op](left, right)
+    
+    
+    async def main():
+        reader = asyncio.StreamReader()
+        await asyncio.get_event_loop().connect_read_pipe(lambda: asyncio.StreamReaderProtocol(reader), sys.stdin)
+        decoder = codecs.getincrementaldecoder('utf_8')()
+    
+        parser = Parser()
+    
+        while True:
+            byte = await reader.read(1)
+            if not byte:
+                break
+            char = decoder.decode(byte)
+            if char:
+                if char == '\n':
+                    char = EOF
+                else:
+                    six.print_('Input char: "%s"' % repr(char))
+                await parser.asyncFeed(char)
+    
+    
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())

@@ -8,12 +8,13 @@ import functools
 import collections
 import logging
 import re
+import sys
 
 from ptk.lexer import ProgressiveLexer, EOF, token
 from ptk.grammar import Grammar, Production, GrammarError
 # production is only imported so that client code doesn't have to import it from grammar
 from ptk.grammar import production # pylint: disable=W0611
-from ptk.utils import Singleton
+from ptk.utils import Singleton, callbackByName
 
 
 class ParseError(Exception):
@@ -141,7 +142,6 @@ class _Shift(object):
         self.newState = newState
 
     def doAction(self, grammar, stack, tok): # pylint: disable=W0613
-        """Shifts"""
         stack.append(_StackItem(self.newState, tok.value))
         return True
 
@@ -152,15 +152,20 @@ class _Reduce(object):
         self.nargs = len(item.production.right)
 
     def doAction(self, grammar, stack, tok): # pylint: disable=W0613
-        """Reduces"""
+        callback, kwargs = self._getCallback(stack)
+        self._applied(grammar, stack, callback(grammar, **kwargs))
+        return False
+
+    def _applied(self, grammar, stack, prodVal):
+        stack.append(_StackItem(grammar.goto(stack[-1].state, self.item.production.name), prodVal))
+
+    def _getCallback(self, stack):
         if self.nargs:
             args = [stackItem.value for stackItem in stack[-self.nargs:]]
             stack[-self.nargs:] = []
-            prodVal = self.item.production.apply(grammar, args)
         else:
-            prodVal = self.item.production.apply(grammar, [])
-        stack.append(_StackItem(grammar.goto(stack[-1].state, self.item.production.name), prodVal))
-        return False
+            args = []
+        return self.item.production.apply(args)
 
 
 class LRParser(Grammar):
@@ -178,21 +183,23 @@ class LRParser(Grammar):
     """
     def __init__(self): # pylint: disable=R0914,R0912
         super(LRParser, self).__init__()
-        self.__restartParser()
+        self._restartParser()
 
     def newToken(self, tok):
+        try:
+            for action, stack in self._processToken(tok):
+                if action.doAction(self, stack, tok):
+                    break
+        except _Accept as exc:
+            self._restartParser()
+            self.newSentence(exc.result)
+
+    def _processToken(self, tok):
         while True:
             action = self.__actions__.get((self.__stack[-1].state, tok.type), None)
             if action is None:
                 raise ParseError(self, tok, self.__stack[-1].state)
-
-            try:
-                if action.doAction(self, self.__stack, tok):
-                    break
-            except _Accept as exc:
-                self.__restartParser()
-                self.newSentence(exc.result)
-                break
+            yield action, self.__stack
 
     def newSentence(self, sentence): # pragma: no cover
         """
@@ -201,6 +208,18 @@ class LRParser(Grammar):
         :param sentence: The value associated with the start symbol.
         """
         raise NotImplementedError
+
+    @classmethod
+    def _createProductionParser(cls, name, priority):
+        return ProductionParser(callbackByName(name), priority, cls)
+
+    @classmethod
+    def _createReduceAction(cls, item):
+        return _Reduce(item)
+
+    @classmethod
+    def _createShiftAction(cls, state):
+        return _Shift(state)
 
     @classmethod
     def prepare(cls):
@@ -279,13 +298,13 @@ class LRParser(Grammar):
         for state in states:
             for item in cls.__itemSetClosure(state):
                 if item.shouldReduce():
-                    action = _Reduce(item)
+                    action = cls._createReduceAction(item)
                     reachable.add(item.production.name)
                     cls.__addReduceAction(state, item.terminal, action)
                 else:
                     symbol = item.production.right[item.dot]
                     if symbol in cls.tokenTypes():
-                        cls.__addShiftAction(state, symbol, _Shift(goto[(state, symbol)]))
+                        cls.__addShiftAction(state, symbol, cls._createShiftAction(goto[(state, symbol)]))
         return reachable
 
     @classmethod
@@ -374,7 +393,7 @@ class LRParser(Grammar):
     def goto(cls, state, symbol):
         return cls._goto[(state, symbol)]
 
-    def __restartParser(self):
+    def _restartParser(self):
         self.__stack = [_StackItem(self._startState, None)]
 
     @classmethod
@@ -594,15 +613,18 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
     def __addAtMostOne(self, productions, prod, symbol, name):
         clone = prod.cloned()
         if name is not None:
-            previous = prod.callback
-            def callback(*args, **kwargs):
-                kwargs[name] = None
-                return previous(*args, **kwargs)
-            clone.callback = callback
+            self._wrapCallbackNone(name, clone)
         productions.append(clone)
 
         prod.addSymbol(symbol, name=name)
         productions.append(prod)
+
+    def _wrapCallbackNone(self, name, prod):
+        previous = prod.callback
+        def callback(*args, **kwargs):
+            kwargs[name] = None
+            return previous(*args, **kwargs)
+        prod.callback = callback
 
     def __addList(self, productions, prod, symbol, name, allowEmpty, sep):
         class ListSymbol(six.with_metaclass(Singleton, object)):
@@ -610,32 +632,41 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
 
         if allowEmpty:
             clone = prod.cloned()
-            previous = clone.callback
-            def cbEmpty(*args, **kwargs):
-                if name is not None:
-                    kwargs[name] = []
-                return previous(*args, **kwargs)
-            clone.callback = cbEmpty
+            self._wrapCallbackEmpty(name, clone)
             productions.append(clone)
 
         prod.addSymbol(ListSymbol, name=name)
         productions.append(prod)
 
-        def cbOne(_, item):
-            return [item]
-        listProd = Production(ListSymbol, cbOne)
+        listProd = Production(ListSymbol, self._wrapCallbackOne())
         listProd.addSymbol(symbol, name='item')
         productions.append(listProd)
 
-        def cbNext(_, items, item):
-            items.append(item)
-            return items
-        listProd = Production(ListSymbol, cbNext)
+        listProd = Production(ListSymbol, self._wrapCallbackNext())
         listProd.addSymbol(ListSymbol, name='items')
         if sep is not None:
             listProd.addSymbol(sep)
         listProd.addSymbol(symbol, name='item')
         productions.append(listProd)
+
+    def _wrapCallbackEmpty(self, name, prod):
+        previous = prod.callback
+        def cbEmpty(*args, **kwargs):
+            if name is not None:
+                kwargs[name] = []
+            return previous(*args, **kwargs)
+        prod.callback = cbEmpty
+
+    def _wrapCallbackOne(self):
+        def cbOne(_, item):
+            return [item]
+        return cbOne
+
+    def _wrapCallbackNext(self):
+        def cbNext(_, items, item):
+            items.append(item)
+            return items
+        return cbNext
 
     def P2(self):
         # 'name' is replaced in newSentence()
@@ -666,3 +697,7 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
 
     def PROPERTIES2(self, name):
         return dict(name=name)
+
+
+if sys.version_info >= (3, 5):
+    from ptk.async_parser import AsyncLRParser # pylint: disable=W0611

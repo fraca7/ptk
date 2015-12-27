@@ -16,7 +16,7 @@ import inspect
 import logging
 
 from ptk.lexer import EOF, _LexerMeta
-from ptk.utils import memoize, Singleton, callbackByName
+from ptk.utils import memoize, Singleton
 
 
 class Epsilon(six.with_metaclass(Singleton, object)):
@@ -66,12 +66,9 @@ class Production(object):
         prod.__ids = dict(self.__ids) # pylint: disable=W0212
         return prod
 
-    def apply(self, grammar, args):
-        """
-        Invokes the associated callback
-        """
+    def apply(self, args):
         kwargs = dict([(name, args[index]) for index, name in self.__ids.items()])
-        return self.callback(grammar, **kwargs)
+        return self.callback, kwargs
 
     def rightmostTerminal(self, grammar):
         """
@@ -119,8 +116,7 @@ class _GrammarMeta(_LexerMeta):
             attrs['__prepared__'] = False
             klass = super(_GrammarMeta, metacls).__new__(metacls, name, bases, attrs)
             for func, string, priority in _PRODREGISTER:
-                from ptk.parser import ProductionParser
-                parser = ProductionParser(callbackByName(func.__name__), priority, klass)
+                parser = klass._createProductionParser(func.__name__, priority) # pylint: disable=W0212
                 parser.parse(string)
             return klass
         finally:

@@ -12,7 +12,8 @@ What is PTK ?
 PTK is a LR(1) parser "generator" for Python. It is not actually a
 "generator" in the sense that it doesn't output source code, using
 Python's dynamic nature to build everything it needs at runtime
-instead.
+instead. Also, it supports asynchronous parsing; see the API
+documentation for details.
 
 This code is licensed under the `GNU LGPL version 3
 <https://www.gnu.org/copyleft/lesser.html>`_.
@@ -114,6 +115,12 @@ The full documentation is hosted `here <http://pythonhosted.org/ptk/>`_.
 
 Changelog
 ---------
+
+Version 1.2.0:
+
+- Production methods cannot have the same name any more. This was
+  idiotic to begin with. Inheritance thus works as expected.
+- Add AsyncLexer and AsyncLRParser for asynchronous parsing.
 
 Version 1.1.0:
 
