@@ -148,7 +148,7 @@ is equivalent to
    A -> B
 
 The semantic value is None if the empty production was applied, or the
-semantic value of B if the "A -> B" production was applied.
+semantic value of B if the 'A -> B' production was applied.
 
 .. code-block:: none
 
