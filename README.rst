@@ -116,6 +116,11 @@ The full documentation is hosted `here <http://pythonhosted.org/ptk/>`_.
 Changelog
 ---------
 
+Verison 1.3.0:
+
+- Asynchronous classes cannot be imported from 'regular' modules
+  anymore, import them explicitely from 'ptk.async_lexer' and 'ptk.async_parser'.
+
 Version 1.2.0:
 
 - Production methods cannot have the same name any more. This was

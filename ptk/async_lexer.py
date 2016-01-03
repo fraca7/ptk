@@ -6,7 +6,7 @@
 # XXXTODO: when pylint supports async, remove this...
 # pylint: skip-file
 
-from ptk.lexer import ProgressiveLexer
+from ptk.lexer import ProgressiveLexer, token, EOF, LexerError
 
 
 class AsyncLexer(ProgressiveLexer):
