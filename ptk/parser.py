@@ -8,7 +8,6 @@ import functools
 import collections
 import logging
 import re
-import sys
 
 from ptk.lexer import ProgressiveLexer, EOF, token
 from ptk.grammar import Grammar, Production, GrammarError
@@ -697,7 +696,3 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
 
     def PROPERTIES2(self, name):
         return dict(name=name)
-
-
-if sys.version_info >= (3, 5):
-    from ptk.async_parser import AsyncLRParser # pylint: disable=W0611

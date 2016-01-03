@@ -6,7 +6,7 @@
 # XXXTODO: when pylint supports async, remove this...
 # pylint: skip-file
 
-from ptk.parser import LRParser, ProductionParser, _Accept, _Reduce, _Shift
+from ptk.parser import production, LRParser, ProductionParser, leftAssoc, rightAssoc, nonAssoc, ParseError, _Accept, _Reduce, _Shift
 
 
 class _AsyncShift(_Shift):

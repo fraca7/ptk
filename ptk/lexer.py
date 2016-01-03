@@ -7,7 +7,6 @@ import six
 import inspect
 import re
 import collections
-import sys
 
 from ptk.regex import buildRegex, DeadState, RegexTokenizer
 from ptk.utils import Singleton, callbackByName
@@ -394,7 +393,3 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
                 if tok.type is None or self.consumer() is not None:
                     break
                 return tok.token()
-
-
-if sys.version_info >= (3, 5):
-    from ptk.async_lexer import AsyncLexer # pylint: disable=W0611
