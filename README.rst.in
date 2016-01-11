@@ -15,7 +15,8 @@ Python's dynamic nature to build everything it needs at runtime
 instead. Also, it supports asynchronous parsing; see the API
 documentation for details.
 
-This code is licensed under the `GNU LGPL version 3
+This code is licensed under the `GNU LGPL version 3 or, at your
+option, any later version
 <https://www.gnu.org/copyleft/lesser.html>`_.
 
 Supported platforms
