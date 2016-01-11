@@ -1,6 +1,5 @@
 
 PYTHON?=python3
-VERSION=$(shell $(PYTHON) -c 'from ptk.meta import version; import six; six.print_(version)')
 
 all:
 	@echo Targets:
