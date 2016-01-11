@@ -31,7 +31,7 @@ nuke:
 documentation:
 	cd doc; make html
 	rm -rf html
-	cp -a doc/build/html .
+	mv doc/build/html .
 
 tarball: documentation
 	$(PYTHON) setup.py sdist --formats=bztar
