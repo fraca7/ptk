@@ -41,7 +41,7 @@ Lexical analysis
       class MyLexer(ReLexer):
           @token(r'[a-zA-Z_][a-zA-Z0-9_]*', types=['builtin', 'identifier'])
           def identifier_or_builtin(self, tok):
-              tok.type = 'builtin' in tok.value in ['len', 'id'] else 'identifier'
+              tok.type = 'builtin' if tok.value in ['len', 'id'] else 'identifier'
 
    In this case the default value of the *type* attribute is *None*
    and you **must** set it. Letting None as token type (or setting it
