@@ -19,6 +19,28 @@ This code is licensed under the `GNU LGPL version 3 or, at your
 option, any later version
 <https://www.gnu.org/copyleft/lesser.html>`_.
 
+Why another one of those ?
+--------------------------
+
+There are a number of parser generators for Python out there. Most of
+them only support LL(1) or PEG. The other ones are either
+
+  - Unmaintained
+  - Straight translations from Yacc/Bison, and thus use an ugly syntax
+  - All of the above
+
+The main goals of PTK are
+
+  - Clean, compact, Python-friendly syntax
+  - Support for asynchronous input streams: why would you need the
+    whole input string to start working when the underlying system is
+    actually an automaton ?
+  - Play nice in 'special' cases, like when the underlying
+    'filesystem' is a PyZipFile archive.
+  - Don't use hacks like module-level introspection to compensate for
+    an ugly design (I'm looking at you PLY). Those tend to produce
+    subtle and headache-inducing bugs when running from compiled code.
+
 Supported platforms
 -------------------
 
