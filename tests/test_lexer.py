@@ -15,6 +15,11 @@ class LexerUnderTestMixin(object):
     def newToken(self, tok):
         self.testCase.feed(tok)
 
+    def deferNewToken(self, tok):
+        self.testCase.feed(tok)
+        from twisted.internet.defer import succeed
+        return succeed(None)
+
 
 class LexerTestCase(unittest.TestCase):
     def setUp(self):

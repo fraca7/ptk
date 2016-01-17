@@ -22,7 +22,7 @@ max-nested-blocks=7
 
 [BASIC]
 bad-functions=filter,input
-good-names=i,j,k,ex,Run,_,rx
+good-names=i,j,k,ex,Run,_,rx,d,df
 
 function-rgx=[a-z_][a-zA-Z0-9_]{2,30}$
 variable-rgx=[a-z_][a-zA-Z0-9_]{2,30}$
