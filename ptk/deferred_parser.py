@@ -8,6 +8,7 @@ from ptk.utils import callbackByName
 
 from twisted.internet.defer import succeed, Deferred, maybeDeferred
 from twisted.python.failure import Failure
+import six
 
 
 class _DeferShift(_Shift):
@@ -80,7 +81,7 @@ class DeferredLRParser(LRParser):
                 return result
 
             try:
-                action, stack = actions.next()
+                action, stack = six.next(actions)
             except StopIteration:
                 d.callback(None)
             else:
