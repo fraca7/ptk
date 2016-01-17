@@ -344,3 +344,14 @@ asynchronous parser:
     
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
+
+Asynchronous lexer/parser using Deferreds
+=========================================
+
+The :py:class:`DeferredLexer` and :py:class:`DeferredLRParser` work the same
+as :py:class:`AsyncLexer` and :py:class:`AsyncLRParser`, but use
+Twisted's Deferred objects instead of Python 3.5-like asynchronous
+methods. The special methods are called :py:func:`DeferredLexer.deferNewToken`and
+:py:func:`DeferredLRParser.deferNewSentence` and must return
+Deferred instances. Semantic actions can return either Deferred
+instances or regular values. See the defer_calc.py sample for details.
