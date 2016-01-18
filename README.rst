@@ -139,13 +139,14 @@ The full documentation is hosted `here <http://pythonhosted.org/ptk/>`_.
 Changelog
 ---------
 
-Version 1.4.0:
+Version 1.3.1:
 
-- Added deferred_lexer and deferred_parser (asynchronous parsing using
-  Twisted Deferred objects)
+- Fix version number in README.rst
 
 Version 1.3.0:
 
+- Added deferred_lexer and deferred_parser (asynchronous parsing using
+  Twisted Deferred objects)
 - Asynchronous classes cannot be imported from 'regular' modules
   anymore, import them explicitely from 'ptk.async_lexer' and 'ptk.async_parser'.
 
