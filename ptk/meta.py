@@ -17,7 +17,7 @@ class PackageInfo(object):
     author_name = six.u('J\u00E9r\u00F4me Laheurte')
     author_email = six.u('jerome@jeromelaheurte.net')
 
-    short_description = six.u('LR(1) parsing framework for Python with support for parsing asynchronous input')
+    short_description = six.u('LR(1) parsing framework for Python with support for asynchronous input')
 
 
 version = PackageInfo.version
