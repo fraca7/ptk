@@ -77,8 +77,8 @@ Using pip::
 
 From source::
 
-  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.2.0.tar.gz
-  $ tar xjf ptk-1.2.0.tar.bz2; cd ptk-1.2.0
+  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.3.1.tar.gz
+  $ tar xjf ptk-1.3.1.tar.bz2; cd ptk-1.3.1
   $ sudo python ./setup.py install
 
 Sample usage
@@ -139,13 +139,15 @@ The full documentation is hosted `here <http://pythonhosted.org/ptk/>`_.
 Changelog
 ---------
 
+Version 1.4.0:
+
+- Added deferred_lexer and deferred_parser (asynchronous parsing using
+  Twisted Deferred objects)
+
 Version 1.3.0:
 
 - Asynchronous classes cannot be imported from 'regular' modules
   anymore, import them explicitely from 'ptk.async_lexer' and 'ptk.async_parser'.
-
-- Added deferred_lexer and deferred_parser (asynchronous parsing using
-  Twisted Deferred objects)
 
 Version 1.2.0:
 
