@@ -29,7 +29,7 @@ nuke:
 	hg purge --all
 
 documentation:
-	cd doc; make html
+	cd doc; $(MAKE) html
 	rm -rf html
 	mv doc/build/html .
 
