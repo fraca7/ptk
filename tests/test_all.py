@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-import unittest
+import os, sys, unittest
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from test_utils import *
 from test_regex import *
