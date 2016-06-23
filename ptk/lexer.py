@@ -252,7 +252,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
         match = None
         matchlen = 0
         for rx, callback, defaultType in self.__regexes:
-            mtc = rx.search(string[pos:])
+            mtc = rx.match(string[pos:])
             if mtc:
                 value = mtc.group(0)
                 if len(value) > matchlen:
