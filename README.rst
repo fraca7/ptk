@@ -77,8 +77,8 @@ Using pip::
 
 From source::
 
-  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.3.1.tar.gz
-  $ tar xjf ptk-1.3.1.tar.bz2; cd ptk-1.3.1
+  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.3.2.tar.gz
+  $ tar xjf ptk-1.3.2.tar.bz2; cd ptk-1.3.2
   $ sudo python ./setup.py install
 
 Sample usage
@@ -134,10 +134,14 @@ Python file from a Yacc or Bison grammar file.
 API documentation
 -----------------
 
-The full documentation is hosted `here <http://pythonhosted.org/ptk/>`_.
+The full documentation is hosted `here<http://ptk.readthedocs.io/en/release-1.3.2/>`_.
 
 Changelog
 ---------
+
+Version 1.3.2:
+
+- Fix Python regular expression based lexer (use match instead of search)
 
 Version 1.3.1:
 
