@@ -11,6 +11,13 @@ import six
 import re
 import collections
 
+
+def intValue(char):
+    if six.PY3 and isinstance(char, int): # Byte
+        return int(bytes([char]))
+    return int(char)
+
+
 #===============================================================================
 # Regex objects
 
@@ -407,9 +414,10 @@ class RegexTokenizer(object): # pylint: disable=R0903
 
     def _state9(self, char, tokenList): # pylint: disable=W0613
         # Start of exponent
-        if not char.isdigit():
+        try:
+            self._exponentValue = intValue(char)
+        except ValueError:
             raise InvalidExponentError('Exponent not starting with a number')
-        self._exponentValue = int(char)
         return 10
 
     def _state10(self, char, tokenList):
@@ -420,19 +428,23 @@ class RegexTokenizer(object): # pylint: disable=R0903
         elif char in [six.u('}'), six.b('}')[0]]:
             tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(self._exponentValue, self._exponentValue)))
             return 0
-        elif char.isdigit():
-            self._exponentValue *= 10
-            self._exponentValue += int(char)
         else:
-            raise InvalidExponentError('Invalid character "%s"' % char)
+            try:
+                v = intValue(char)
+            except ValueError:
+                raise InvalidExponentError('Invalid character "%s"' % char)
+            self._exponentValue *= 10
+            self._exponentValue += v
 
     def _state11(self, char, tokenList): # pylint: disable=W0613
         # In exponent, expecting second term of interval
         if char in [six.u('}'), six.b('}')[0]]:
             raise InvalidExponentError('Missing range end')
-        if not char.isdigit():
+        try:
+            v = intValue(char)
+        except ValueError:
             raise InvalidExponentError('Invalid character "%s"' % char)
-        self._exponentValue = int(char)
+        self._exponentValue = v
         return 12
 
     def _state12(self, char, tokenList):
@@ -442,10 +454,12 @@ class RegexTokenizer(object): # pylint: disable=R0903
                 raise InvalidExponentError('Invalid exponent range %d-%d' % (self._startExponent, self._exponentValue))
             tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(self._startExponent, self._exponentValue)))
             return 0
-        if not char.isdigit():
+        try:
+            v = intValue(char)
+        except ValueError:
             raise InvalidExponentError('Invalid character "%s"' % char)
         self._exponentValue *= 10
-        self._exponentValue += int(char)
+        self._exponentValue += v
 
 #===============================================================================
 # Parsing
