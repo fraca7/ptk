@@ -147,7 +147,7 @@ class TokenTypeTestCaseMixin(object):
                 self.testCase.assertTrue(tok.type is None)
             def newToken(self, tok):
                 pass
-                
+          
         self.lexer = TestedLexer(self)
 
     def test_none(self):
@@ -179,10 +179,7 @@ class LexerByteTestCaseMixin(object):
 
     def test_byte_regex_gives_byte_token_value(self):
         tok, = self.doLex(six.b('foo'))
-        if six.PY2:
-            self.assertTrue(isinstance(tok.value, str))
-        else:
-            self.assertTrue(isinstance(tok.value, bytes))
+        self.assertTrue(isinstance(tok.value, six.binary_type))
 
 
 class ProgressiveLexerByteTestCase(LexerByteTestCaseMixin, ProgressiveLexerTestCase):

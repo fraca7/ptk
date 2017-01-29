@@ -131,7 +131,7 @@ class LexerBase(six.with_metaclass(_LexerMeta, object)):
         :param char: The character to test
         :return: True if *char* should be ignored
         """
-        return char in [six.b(' '), six.u(' '), six.b('\t'), six.u('\t')]
+        return char in [six.b(' ')[0], six.u(' '), six.b('\t')[0], six.u('\t')]
 
     def setConsumer(self, consumer):
         """
@@ -230,7 +230,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
         pos = 0
         while pos < len(string):
             char = string[pos]
-            if char == '\n':
+            if char in (six.u('\n'), six.b('\n')[0]):
                 self.advanceLine()
             else:
                 self.advanceColumn()
@@ -293,8 +293,6 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
         super(ProgressiveLexer, self).restartLexer(resetPos=resetPos)
 
     def parse(self, string):
-        if six.PY3 and isinstance(string, bytes):
-            string = [chr(c).encode('ascii') for c in string]
         for char in string:
             self.feed(char)
         self.feed(EOF)
@@ -311,7 +309,7 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
                 self.newToken(tok)
 
     def _feed(self, char, charPos): # pylint: disable=R0912,R0915
-        if char == '\n':
+        if char in (six.u('\n'), six.b('\n')[0]):
             self.advanceLine()
         else:
             self.advanceColumn()
@@ -361,7 +359,8 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
                 self.__matches = [(pos, callback) for pos, callback in self.__matches if pos == self.__maxPos]
                 self.__currentState = newState
 
-                self.__currentMatch.append((char, self.position() if charPos is None else charPos))
+                item = bytes([char]) if six.PY3 and isinstance(char, int) else char
+                self.__currentMatch.append((item, self.position() if charPos is None else charPos))
                 if self.__currentState:
                     return
 
@@ -382,7 +381,8 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
     def __finalizeMatch(self):
         # First declared token method
         matches = set([callback for _, callback in self.__matches])
-        match = type(self.__currentMatch[0][0])().join([char for char, pos in self.__currentMatch[:self.__maxPos]]) # byte or unicode
+        match = type(self.__currentMatch[0][0])().join([(bytes([char]) if six.PY3 and isinstance(char, int) else char) \
+                                                        for char, pos in self.__currentMatch[:self.__maxPos]]) # byte or unicode
         remain = self.__currentMatch[self.__maxPos:]
         self.restartLexer(False)
         self._input.extend(remain)
