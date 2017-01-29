@@ -12,7 +12,7 @@ from ptk.lexer import ProgressiveLexer, token, EOF, LexerError
 from ptk.regex import DeadState
 
 try:
-    from async_generator import aclosing, async_generator, yield_
+    from async_generator import aclosing, async_generator, yield_, yield_from_
 except ImportError:
     raise RuntimeError('You need to have the async_generator package installed to use the async lexer.')
 
@@ -38,6 +38,22 @@ class AsyncLexer(ProgressiveLexer):
             async with aclosing(self._asyncFeed(char, charPos)) as agen:
                 async for tok in agen:
                     await self.asyncNewToken(tok)
+
+    @async_generator
+    async def asyncIterFeed(self, char, charPos=None):
+        self._input.append((char, charPos))
+        while self._input:
+            char, charPos = self._input.pop(0)
+            async with aclosing(self._asyncFeed(char, charPos)) as agen:
+                async for tok in agen:
+                    value = await self.asyncNewToken(tok)
+                    if value is not None:
+                        await yield_(value)
+
+    @async_generator
+    async def asyncIterParse(self, chars):
+        for char in chars:
+            await yield_from_(self.asyncIterFeed(char))
 
     async def asyncNewToken(self, tok):
         """
