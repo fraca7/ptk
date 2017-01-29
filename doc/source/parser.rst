@@ -275,8 +275,8 @@ asynchronous parser:
     
     import six, operator, os, asyncio, sys, codecs
     
-    from ptk.lexer import token, AsyncLexer, EOF
-    from ptk.parser import production, leftAssoc, AsyncLRParser, ParseError
+    from ptk.async_lexer import token, AsyncLexer, EOF
+    from ptk.async_parser import production, leftAssoc, AsyncLRParser, ParseError
     
     
     @leftAssoc('+', '-')
