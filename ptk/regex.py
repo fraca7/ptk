@@ -183,10 +183,6 @@ class RegularExpression(object):
         """
         Match a whole string
         """
-
-        if six.PY3 and isinstance(string, bytes):
-            string = [chr(c).encode('ascii') for c in string]
-
         self.start()
         try:
             for char in string:
@@ -229,7 +225,7 @@ class AnyCharacterClass(CharacterClass):
     """The ."""
 
     def __contains__(self, char):
-        return char not in [six.u('\n'), six.b('\n')]
+        return char not in [six.u('\n'), six.b('\n')[0]]
 
     def __eq__(self, other):
         return isinstance(other, AnyCharacterClass)
@@ -257,7 +253,7 @@ class RegexCharacterClass(CharacterClass): # pylint: disable=R0903
         return self is other # Because of cache
 
     def __contains__(self, char):
-        return self._rx.match(char) is not None
+        return self._rx.match(bytes([char]) if six.PY3 and isinstance(char, int) else char) is not None
 
 
 class LitteralCharacterClass(CharacterClass): # pylint: disable=R0903
@@ -297,11 +293,7 @@ class RegexTokenizer(object): # pylint: disable=R0903
     Token = collections.namedtuple('Token', ['type', 'value'])
 
     def __init__(self, regex):
-        if six.PY3 and isinstance(regex, bytes):
-            self._stack = [chr(c).encode('ascii') for c in reversed(regex)]
-        else:
-            self._stack = list(reversed(regex))
-
+        self._stack = list(reversed(regex))
         self._state = 0
         self._currentClass = None
         self._exponentValue = 0
@@ -342,29 +334,29 @@ class RegexTokenizer(object): # pylint: disable=R0903
 
     def _state0(self, char, tokenList):
         # Normal state
-        if char in [six.u('*'), six.b('*')]:
+        if char in [six.u('*'), six.b('*')[0]]:
             tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(0, None)))
-        elif char in [six.u('+'), six.b('+')]:
+        elif char in [six.u('+'), six.b('+')[0]]:
             tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(1, None)))
-        elif char in [six.u('.'), six.b('.')]:
+        elif char in [six.u('.'), six.b('.')[0]]:
             tokenList.append(self.Token(self.TOK_CLASS, AnyCharacterClass()))
-        elif char in [six.u('('), six.b('(')]:
+        elif char in [six.u('('), six.b('(')[0]]:
             tokenList.append(self.Token(self.TOK_LPAREN, char))
-        elif char in [six.u(')'), six.b(')')]:
+        elif char in [six.u(')'), six.b(')')[0]]:
             tokenList.append(self.Token(self.TOK_RPAREN, char))
-        elif char in [six.u('|'), six.b('|')]:
+        elif char in [six.u('|'), six.b('|')[0]]:
             tokenList.append(self.Token(self.TOK_UNION, char))
         elif char == six.u('['):
             self._currentClass = six.StringIO()
             self._currentClass.write(char)
             return 2
-        elif char == six.b('['):
+        elif char == six.b('[')[0]:
             self._currentClass = six.BytesIO()
-            self._currentClass.write(char)
+            self._currentClass.write(bytes([char]) if six.PY3 else char)
             return 2
-        elif char in [six.u('{'), six.b('{')]:
+        elif char in [six.u('{'), six.b('{')[0]]:
             return 9
-        elif char in [six.u(']'), six.b(']'), six.u('}'), six.b('}')]:
+        elif char in [six.u(']'), six.b(']')[0], six.u('}'), six.b('}')[0]]:
             raise TokenizeError('Unexpected token "%s"' % char)
         elif char in [self.ubackslash, self.bbackslash]:
             return 1
@@ -375,16 +367,16 @@ class RegexTokenizer(object): # pylint: disable=R0903
         # After a "\" in normal state
         if char in [six.u('d'), six.u('s'), six.u('w'), six.u('D'), six.u('S'), six.u('W')]:
             tokenList.append(self.Token(self.TOK_CLASS, RegexCharacterClass(self.ubackslash + char)))
-        elif char in [six.b('d'), six.b('s'), six.b('w'), six.b('D'), six.b('S'), six.b('W')]:
+        elif char in [six.b('d')[0], six.b('s')[0], six.b('w')[0], six.b('D')[0], six.b('S')[0], six.b('W')[0]]:
             tokenList.append(self.Token(self.TOK_CLASS, RegexCharacterClass(self.bbackslash + char)))
         elif char == six.u('n'):
             tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(six.u('\n'))))
         elif char == six.u('t'):
             tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(six.u('\t'))))
-        elif char == six.b('n'):
-            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(six.b('\n'))))
-        elif char == six.b('t'):
-            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(six.b('\t'))))
+        elif char == six.b('n')[0]:
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(six.b('\n')[0])))
+        elif char == six.b('t')[0]:
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(six.b('\t')[0])))
         else:
             tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(char)))
         return 0
@@ -395,19 +387,20 @@ class RegexTokenizer(object): # pylint: disable=R0903
         # In character class
         if char in [self.ubackslash, self.bbackslash]:
             return 3
-        if char in [six.u(']'), six.b(']')]:
-            self._currentClass.write(char)
+        if char in [six.u(']'), six.b(']')[0]]:
+            self._currentClass.write(bytes([char]) if six.PY3 and isinstance(char, int) else char)
             tokenList.append(self.Token(self.TOK_CLASS, RegexCharacterClass(self._currentClass.getvalue())))
             self._currentClass = None
             return 0
-        self._currentClass.write(char)
+        self._currentClass.write(bytes([char]) if six.PY3 and isinstance(char, int) else char)
 
     def _state3(self, char, tokenList): # pylint: disable=W0613
         # After "\" in character class
         if six.PY2 and isinstance(char, str):
-            self._currentClass.write(self.bbackslash + char)
+            self._currentClass.write(self.bbackslash)
         else:
-            self._currentClass.write(self.ubackslash + char)
+            self._currentClass.write(self.ubackslash)
+        self._currentClass.write(bytes([char]) if six.PY3 and isinstance(char, int) else char)
         return 2
 
     # Exponent
@@ -421,10 +414,10 @@ class RegexTokenizer(object): # pylint: disable=R0903
 
     def _state10(self, char, tokenList):
         # In exponent, computing start value
-        if char in [six.u('-'), six.b('-')]:
+        if char in [six.u('-'), six.b('-')[0]]:
             self._startExponent = self._exponentValue
             return 11
-        elif char in [six.u('}'), six.b('}')]:
+        elif char in [six.u('}'), six.b('}')[0]]:
             tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(self._exponentValue, self._exponentValue)))
             return 0
         elif char.isdigit():
@@ -435,7 +428,7 @@ class RegexTokenizer(object): # pylint: disable=R0903
 
     def _state11(self, char, tokenList): # pylint: disable=W0613
         # In exponent, expecting second term of interval
-        if char in [six.u('}'), six.b('}')]:
+        if char in [six.u('}'), six.b('}')[0]]:
             raise InvalidExponentError('Missing range end')
         if not char.isdigit():
             raise InvalidExponentError('Invalid character "%s"' % char)
@@ -444,7 +437,7 @@ class RegexTokenizer(object): # pylint: disable=R0903
 
     def _state12(self, char, tokenList):
         # In exponent, computing end value
-        if char in [six.u('}'), six.b('}')]:
+        if char in [six.u('}'), six.b('}')[0]]:
             if self._startExponent > self._exponentValue:
                 raise InvalidExponentError('Invalid exponent range %d-%d' % (self._startExponent, self._exponentValue))
             tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(self._startExponent, self._exponentValue)))

@@ -26,8 +26,6 @@ class DeferredLexerTestCase(unittest.TestCase):
         return succeed(None)
 
     def doLex(self, inputString):
-        if six.PY3 and isinstance(inputString, bytes):
-            inputString = [chr(c).encode('ascii') for c in inputString]
         for char in inputString:
             d = self.lexer.deferFeed(char)
             self.assertTrue(d.called)
