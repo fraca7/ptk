@@ -1,3 +1,4 @@
  * LALR ? Not sure it's worth it.
  * ProgressiveLexer: subset construction in byte mode
  * Serialization, maybe
+ * Include position in input as attribute of token
