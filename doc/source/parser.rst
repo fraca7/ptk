@@ -246,7 +246,8 @@ Asynchronous lexer/parser
 The :py:class:`AsyncLexer` and :py:class:`AsyncLRParser` classes allow
 you to parse an input stream asynchronously. Since this uses the new
 asynchronous method syntax introduced in Python 3.5, it's only
-available with this version of Python.
+available with this version of Python. Additionally, you must install
+the `async_generator <https://github.com/njsmith/async_generator>`_ module.
 
 The basic idea is that the production methods are asynchronous. Feed
 the input stream one byte/char at a time by awaiting on
@@ -254,6 +255,9 @@ the input stream one byte/char at a time by awaiting on
 unambiguously, this will in turn await on
 :py:func:`AsyncParser.asyncNewToken`. Semantic actions may then be
 awaited on as a result.
+
+Note that if you use a consumer in your lexer, the `feed` method must
+be asynchronous as well.
 
 The samples directory contains the following example of an
 asynchronous parser:

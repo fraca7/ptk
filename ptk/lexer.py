@@ -98,29 +98,29 @@ class LexerBase(six.with_metaclass(_LexerMeta, object)):
 
     def restartLexer(self, resetPos=True):
         if resetPos:
-            self.__pos = _LexerPosition(0, 1)
+            self._pos = _LexerPosition(0, 1)
             self._input = list()
-        self.__consumer = None
+        self._consumer = None
 
     def position(self):
         """
         :return: The current position in stream as a 2-tuple (column, line).
         """
-        return self.__pos
+        return self._pos
 
     def advanceColumn(self, count=1):
         """
         Advances the current position by *count* columns.
         """
-        col, row = self.__pos
-        self.__pos = _LexerPosition(col + count, row)
+        col, row = self._pos
+        self._pos = _LexerPosition(col + count, row)
 
     def advanceLine(self, count=1):
         """
         Advances the current position by *count* lines.
         """
-        _, row = self.__pos
-        self.__pos = _LexerPosition(0, row + count)
+        _, row = self._pos
+        self._pos = _LexerPosition(0, row + count)
 
     @staticmethod
     def ignore(char):
@@ -167,10 +167,10 @@ class LexerBase(six.with_metaclass(_LexerMeta, object)):
                                self.state = 0
                    self.setConsumer(CString())
         """
-        self.__consumer = consumer
+        self._consumer = consumer
 
     def consumer(self):
-        return self.__consumer
+        return self._consumer
 
     def parse(self, string): # pragma: no cover
         """
@@ -217,13 +217,13 @@ class ReLexer(LexerBase): # pylint: disable=W0223
     tokenize whole strings.
     """
     def __init__(self):
-        self.__regexes = list()
+        self._regexes = list()
         for rx, callback, defaultType in self._allTokens()[1]:
             if six.PY2 and isinstance(rx, str) or six.PY3 and isinstance(rx, bytes):
                 crx = re.compile(six.b('^') + rx)
             else:
                 crx = re.compile(six.u('^') + rx)
-            self.__regexes.append((crx, callback, defaultType))
+            self._regexes.append((crx, callback, defaultType))
         super(ReLexer, self).__init__()
 
     def parse(self, string):
@@ -238,7 +238,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
                 if self.ignore(char):
                     pos += 1
                     continue
-                pos = self.__findMatch(string, pos)
+                pos = self._findMatch(string, pos)
             else:
                 tok = self.consumer().feed(char)
                 if tok is not None:
@@ -248,10 +248,10 @@ class ReLexer(LexerBase): # pylint: disable=W0223
                 pos += 1
         self.newToken(EOF)
 
-    def __findMatch(self, string, pos):
+    def _findMatch(self, string, pos):
         match = None
         matchlen = 0
-        for rx, callback, defaultType in self.__regexes:
+        for rx, callback, defaultType in self._regexes:
             mtc = rx.match(string[pos:])
             if mtc:
                 value = mtc.group(0)
@@ -284,11 +284,11 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
     This is **slow as hell**.
     """
     def restartLexer(self, resetPos=True):
-        self.__currentState = [(buildRegex(rx).start(), callback, defaultType, [0]) for rx, callback, defaultType in self._allTokens()[1]]
-        self.__currentMatch = list()
-        self.__matches = list()
-        self.__maxPos = 0
-        self.__state = 0
+        self._currentState = [(buildRegex(rx).start(), callback, defaultType, [0]) for rx, callback, defaultType in self._allTokens()[1]]
+        self._currentMatch = list()
+        self._matches = list()
+        self._maxPos = 0
+        self._state = 0
         self._input = list()
         super(ProgressiveLexer, self).restartLexer(resetPos=resetPos)
 
@@ -324,53 +324,53 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
 
         try:
             if char is EOF:
-                if self.__state == 0:
+                if self._state == 0:
                     self.restartLexer()
                     yield EOF
                     return
-                self.__maxPos = max(self.__maxPos, max(pos[0] for regex, callback, defaultType, pos in self.__currentState))
-                if self.__maxPos == 0 and self.__currentMatch:
-                    raise LexerError(self.__currentMatch[0][0], *self.__currentMatch[0][1])
-                self.__matches.extend([(pos[0], callback) for regex, callback, defaultType, pos in self.__currentState if pos[0] == self.__maxPos])
-                self.__matches = [(pos, callback) for pos, callback in self.__matches if pos == self.__maxPos]
+                self._maxPos = max(self._maxPos, max(pos[0] for regex, callback, defaultType, pos in self._currentState))
+                if self._maxPos == 0 and self._currentMatch:
+                    raise LexerError(self._currentMatch[0][0], *self._currentMatch[0][1])
+                self._matches.extend([(pos[0], callback) for regex, callback, defaultType, pos in self._currentState if pos[0] == self._maxPos])
+                self._matches = [(pos, callback) for pos, callback in self._matches if pos == self._maxPos]
             else:
-                if self.__state == 0 and self.ignore(char):
+                if self._state == 0 and self.ignore(char):
                     return
-                self.__state = 1
+                self._state = 1
 
                 newState = list()
-                for regex, callback, defaultType, pos in self.__currentState:
+                for regex, callback, defaultType, pos in self._currentState:
                     try:
                         if regex.feed(char):
-                            pos[0] = len(self.__currentMatch) + 1
+                            pos[0] = len(self._currentMatch) + 1
                     except DeadState:
                         if pos[0]:
-                            self.__matches.append((pos[0], callback))
-                            self.__maxPos = max(self.__maxPos, pos[0])
+                            self._matches.append((pos[0], callback))
+                            self._maxPos = max(self._maxPos, pos[0])
                     else:
                         newState.append((regex, callback, defaultType, pos))
 
                 if all([regex.isDeadEnd() for regex, callback, defaultType, pos in newState]):
                     for regex, callback, defaultType, pos in newState:
-                        self.__matches.append((len(self.__currentMatch) + 1, callback))
-                        self.__maxPos = max(self.__maxPos, len(self.__currentMatch) + 1)
+                        self._matches.append((len(self._currentMatch) + 1, callback))
+                        self._maxPos = max(self._maxPos, len(self._currentMatch) + 1)
                     newState = list()
 
-                self.__matches = [(pos, callback) for pos, callback in self.__matches if pos == self.__maxPos]
-                self.__currentState = newState
+                self._matches = [(pos, callback) for pos, callback in self._matches if pos == self._maxPos]
+                self._currentState = newState
 
                 item = bytes([char]) if six.PY3 and isinstance(char, int) else char
-                self.__currentMatch.append((item, self.position() if charPos is None else charPos))
-                if self.__currentState:
+                self._currentMatch.append((item, self.position() if charPos is None else charPos))
+                if self._currentState:
                     return
 
-                if self.__maxPos == 0:
+                if self._maxPos == 0:
                     raise LexerError(char, *self.position())
         except LexerError:
             self.restartLexer()
             raise
 
-        tok = self.__finalizeMatch()
+        tok = self._finalizeMatch()
         if tok is not None:
             yield tok
 
@@ -378,12 +378,12 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
             self.restartLexer()
             yield EOF
 
-    def __finalizeMatch(self):
+    def _finalizeMatch(self):
         # First declared token method
-        matches = set([callback for _, callback in self.__matches])
-        match = type(self.__currentMatch[0][0])().join([(bytes([char]) if six.PY3 and isinstance(char, int) else char) \
-                                                        for char, pos in self.__currentMatch[:self.__maxPos]]) # byte or unicode
-        remain = self.__currentMatch[self.__maxPos:]
+        matches = set([callback for _, callback in self._matches])
+        match = type(self._currentMatch[0][0])().join([(bytes([char]) if six.PY3 and isinstance(char, int) else char) \
+                                                        for char, pos in self._currentMatch[:self._maxPos]]) # byte or unicode
+        remain = self._currentMatch[self._maxPos:]
         self.restartLexer(False)
         self._input.extend(remain)
         for _, callback, defaultType in self._allTokens()[1]:
