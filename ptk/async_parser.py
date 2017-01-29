@@ -81,6 +81,7 @@ class AsyncLRParser(LRParser):
         except _Accept as exc:
             self._restartParser()
             await self.asyncNewSentence(exc.result)
+            return exc.result
 
     async def asyncNewSentence(self, result):
        """
