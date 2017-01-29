@@ -131,9 +131,13 @@ class RegexParserUnicodeTestCase(RegexParserTestCaseMixin, unittest.TestCase):
 
 class RegexParserBytesTestCase(RegexParserTestCaseMixin, unittest.TestCase):
     def _parse(self, rx):
+        if six.PY3 and isinstance(rx, str):
+            rx = rx.encode('UTF-8')
         return super(RegexParserBytesTestCase, self)._parse(rx)
 
     def _match(self, rx, s):
+        if six.PY3 and isinstance(s, str):
+            s = s.encode('UTF-8')
         return super(RegexParserBytesTestCase, self)._match(rx, s)
 
 

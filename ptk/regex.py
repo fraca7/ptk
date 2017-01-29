@@ -312,7 +312,7 @@ class RegexTokenizer(object): # pylint: disable=R0903
             self.bbackslash = '\\'
         else:
             self.ubackslash = '\\'
-            self.bbackslash = '\\'.encode('ascii')
+            self.bbackslash = '\\'.encode('ascii')[0]
 
     def tokens(self):
         """
