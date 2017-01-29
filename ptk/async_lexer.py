@@ -53,7 +53,8 @@ class AsyncLexer(ProgressiveLexer):
     @async_generator
     async def asyncIterParse(self, chars):
         for char in chars:
-            await yield_from_(self.asyncIterFeed(char))
+            async with aclosing(self.asyncIterFeed(char)) as agen:
+                await yield_from_(agen)
 
     async def asyncNewToken(self, tok):
         """
