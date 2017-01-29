@@ -364,7 +364,7 @@ class RegexTokenizer(object): # pylint: disable=R0903
         elif char in [six.u('{'), six.b('{')[0]]:
             return 9
         elif char in [six.u(']'), six.b(']')[0], six.u('}'), six.b('}')[0]]:
-            raise TokenizeError('Unexpected token "%s"' % char)
+            raise TokenizeError('Unexpected token "%s"' % str(char))
         elif char in [self.ubackslash, self.bbackslash]:
             return 1
         else:
@@ -407,8 +407,8 @@ class RegexTokenizer(object): # pylint: disable=R0903
 
     def _state3(self, char, tokenList): # pylint: disable=W0613
         # After "\" in character class
-        if six.PY2 and isinstance(char, str):
-            self._currentClass.write(self.bbackslash)
+        if (six.PY2 and isinstance(char, str)) or (six.PY3 and isinstance(char, int)):
+            self._currentClass.write(bytes([self.bbackslash]))
         else:
             self._currentClass.write(self.ubackslash)
         self._currentClass.write(bytes([char]) if six.PY3 and isinstance(char, int) else char)
@@ -486,7 +486,7 @@ class RegexParser(object):
         tokens = list(tokens)
         expr, pos = self._parse_E1(tokens, 0)
         if len(tokens) != pos:
-            raise RegexParseError('Unexpected token "%s"' % tokens[pos].value)
+            raise RegexParseError('Unexpected token "%s"' % str(tokens[pos].value))
         return expr
 
     def _parse_E1(self, tokens, pos):
@@ -534,7 +534,7 @@ class RegexParser(object):
             return expr, pos + 1
         elif tokens[pos].type == RegexTokenizer.TOK_CLASS:
             return self.klass(tokens[pos].value), pos + 1
-        raise RegexParseError('Unexpected token "%s"' % tokens[pos].value)
+        raise RegexParseError('Unexpected token "%s"' % str(tokens[pos].value))
 
     # Delegate
 
