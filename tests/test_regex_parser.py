@@ -100,6 +100,10 @@ class RegexParserTestCaseMixin(object):
         self.assertTrue(self._match(rx, 'abab'))
         self.assertFalse(self._match(rx, 'abb'))
 
+    def test_crlf(self):
+        rx = self._parse(r'\r\n')
+        self.assertTrue(self._match(rx, '\r\n'))
+
     def test_extra_tokens(self):
         try:
             rx = self._parse('ab(')

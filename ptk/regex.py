@@ -376,10 +376,14 @@ class RegexTokenizer(object): # pylint: disable=R0903
             tokenList.append(self.Token(self.TOK_CLASS, RegexCharacterClass(self.ubackslash + char)))
         elif char in [six.b('d')[0], six.b('s')[0], six.b('w')[0], six.b('D')[0], six.b('S')[0], six.b('W')[0]]:
             tokenList.append(self.Token(self.TOK_CLASS, RegexCharacterClass(self.bbackslash + char)))
+        elif char == six.u('r'):
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(six.u('\r'))))
         elif char == six.u('n'):
             tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(six.u('\n'))))
         elif char == six.u('t'):
             tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(six.u('\t'))))
+        elif char == six.b('r')[0]:
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(six.b('\r')[0])))
         elif char == six.b('n')[0]:
             tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(six.b('\n')[0])))
         elif char == six.b('t')[0]:
