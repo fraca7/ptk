@@ -122,8 +122,7 @@ class AsyncLexer(ProgressiveLexer):
                 self._matches = [(pos, callback) for pos, callback in self._matches if pos == self._maxPos]
                 self._currentState = newState
 
-                item = bytes([char]) if six.PY3 and isinstance(char, int) else char
-                self._currentMatch.append((item, self.position() if charPos is None else charPos))
+                self._currentMatch.append((char, self.position() if charPos is None else charPos))
                 if self._currentState:
                     return
 
