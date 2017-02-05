@@ -26,6 +26,11 @@ class AsyncLexer(ProgressiveLexer):
 
     """
 
+    async def asyncParse(self, text):
+        for i, char in enumerate(text):
+            await self.asyncFeed(char, i+1)
+        return (await self.asyncFeed(EOF))
+
     async def asyncFeed(self, char, charPos=None):
         """
         Asynchronous version of :py:func:`ProgressiveLexer.feed`. This
@@ -37,7 +42,9 @@ class AsyncLexer(ProgressiveLexer):
             char, charPos = self._input.pop(0)
             async with aclosing(self._asyncFeed(char, charPos)) as agen:
                 async for tok in agen:
-                    await self.asyncNewToken(tok)
+                    value = await self.asyncNewToken(tok)
+                    if value is not None:
+                        return value
 
     @async_generator
     async def asyncIterFeed(self, char, charPos=None):
