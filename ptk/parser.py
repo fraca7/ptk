@@ -24,7 +24,7 @@ class ParseError(Exception):
     """
     def __init__(self, grammar, tok, state):
         self.token = tok
-        super(ParseError, self).__init__(six.u('Unexpected token "%s" in state "%s"') % (tok.value, sorted(state)))
+        super(ParseError, self).__init__(six.u('Unexpected token "%s" (%s) in state "%s"') % (tok.value, tok.type, sorted(state)))
 
         self._expecting = set()
         for terminal in grammar.tokenTypes():
