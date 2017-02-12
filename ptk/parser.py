@@ -191,7 +191,7 @@ class LRParser(Grammar):
                     break
         except _Accept as exc:
             self._restartParser()
-            self.newSentence(exc.result)
+            return self.newSentence(exc.result)
 
     def _processToken(self, tok):
         while True:

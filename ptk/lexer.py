@@ -246,7 +246,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
                     if tok[0] is not None:
                         self.newToken(self.Token(*tok))
                 pos += 1
-        self.newToken(EOF)
+        return self.newToken(EOF)
 
     def _findMatch(self, string, pos):
         match = None
