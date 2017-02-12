@@ -425,6 +425,11 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
     def prepare(cls, **kwargs): # pylint: disable=R0915
         # Obviously cannot use @production here
 
+        # When mixing async and sync parsers in the same program this may be called twice,
+        # because AsyncProductionParser inherits from ProductionParser
+        if cls.productions():
+            return
+
         # DECL -> identifier "->" PRODS
         prod = Production('DECL', cls.DECL)
         prod.addSymbol('identifier', 'name')

@@ -142,6 +142,7 @@ Changelog
 Version 1.3.3:
 
 - Fix a number of problems when working with bytes in Python 3
+- One couldn't mix asynchronous and synchronous parsers in the same program
 
 Version 1.3.2:
 
