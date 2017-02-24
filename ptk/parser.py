@@ -99,6 +99,7 @@ class _Item(object):
         self.production = prod
         self.dot = dot
         self.terminal = terminal
+        self.index = None
 
     def shouldReduce(self):
         """
@@ -193,6 +194,10 @@ class LRParser(Grammar):
             self._restartParser()
             return self.newSentence(exc.result)
 
+    def currentLRState(self):
+        for item in self.__stack[-1].state:
+            return item.index
+
     def _processToken(self, tok):
         while True:
             action = self.__actions__.get((self.__stack[-1].state, tok.type), None)
@@ -264,6 +269,8 @@ class LRParser(Grammar):
             logger.debug('State %d', index)
             for item in sorted(state):
                 logger.debug('    %s', item)
+                item.index = index
+            cls.__lrstates__.append(sorted(state))
         logger.info('%d states.', len(states))
 
     @classmethod

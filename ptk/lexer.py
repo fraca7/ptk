@@ -226,8 +226,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
             self._regexes.append((crx, callback, defaultType))
         super(ReLexer, self).__init__()
 
-    def parse(self, string):
-        pos = 0
+    def _parse(self, string, pos):
         while pos < len(string):
             char = string[pos]
             if char in (six.u('\n'), six.b('\n')[0]):
@@ -246,6 +245,9 @@ class ReLexer(LexerBase): # pylint: disable=W0223
                     if tok[0] is not None:
                         self.newToken(self.Token(*tok))
                 pos += 1
+
+    def parse(self, string):
+        self._parse(string, 0)
         return self.newToken(EOF)
 
     def _findMatch(self, string, pos):
