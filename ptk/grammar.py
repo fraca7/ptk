@@ -114,6 +114,7 @@ class _GrammarMeta(_LexerMeta):
             attrs['__productions__'] = list()
             attrs['__precedence__'] = list()
             attrs['__prepared__'] = False
+            attrs['__lrstates__'] = list()
             klass = super(_GrammarMeta, metacls).__new__(metacls, name, bases, attrs)
             for func, string, priority in _PRODREGISTER:
                 parser = klass._createProductionParser(func.__name__, priority) # pylint: disable=W0212
