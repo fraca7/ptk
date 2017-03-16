@@ -185,6 +185,9 @@ class LRParser(Grammar):
         super(LRParser, self).__init__()
         self._restartParser()
 
+    def rstack(self):
+        return reversed(self.__stack)
+
     def newToken(self, tok):
         try:
             for action, stack in self._processToken(tok):
@@ -214,8 +217,8 @@ class LRParser(Grammar):
         raise NotImplementedError
 
     @classmethod
-    def _createProductionParser(cls, name, priority):
-        return ProductionParser(callbackByName(name), priority, cls)
+    def _createProductionParser(cls, name, priority, attrs):
+        return ProductionParser(callbackByName(name), priority, cls, attrs)
 
     @classmethod
     def _createReduceAction(cls, item):
@@ -421,10 +424,11 @@ class LRParser(Grammar):
 
 class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
     # pylint: disable=C0111,C0103,R0201
-    def __init__(self, callback, priority, grammarClass): # pylint: disable=R0915
+    def __init__(self, callback, priority, grammarClass, attributes): # pylint: disable=R0915
         self.callback = callback
         self.priority = priority
         self.grammarClass = grammarClass
+        self.attributes = attributes
 
         super(ProductionParser, self).__init__()
 
@@ -681,7 +685,7 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
 
     def P2(self):
         # 'name' is replaced in newSentence()
-        return [Production(None, self.callback, priority=self.priority)]
+        return [Production(None, self.callback, priority=self.priority, attributes=self.attributes)]
 
     def SYMNAME1(self, identifier):
         return identifier

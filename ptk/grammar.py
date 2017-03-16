@@ -43,10 +43,11 @@ class Production(object):
     """
     Production object
     """
-    def __init__(self, name, callback, priority=None):
+    def __init__(self, name, callback, priority=None, attributes=None):
         self.name = name
         self.callback = callback
         self.right = list()
+        self.attributes = attributes or {}
         self.__priority = priority
         self.__ids = dict() # position => id
 
@@ -116,19 +117,19 @@ class _GrammarMeta(_LexerMeta):
             attrs['__prepared__'] = False
             attrs['__lrstates__'] = list()
             klass = super(_GrammarMeta, metacls).__new__(metacls, name, bases, attrs)
-            for func, string, priority in _PRODREGISTER:
-                parser = klass._createProductionParser(func.__name__, priority) # pylint: disable=W0212
+            for func, string, priority, attrs in _PRODREGISTER:
+                parser = klass._createProductionParser(func.__name__, priority, attrs) # pylint: disable=W0212
                 parser.parse(string)
             return klass
         finally:
             _PRODREGISTER = list()
 
 
-def production(prod, priority=None):
+def production(prod, priority=None, **kwargs):
     def _wrap(func):
-        if any([func.__name__ == aFunc.__name__ and func != aFunc for aFunc, _, _ in _PRODREGISTER]):
+        if any([func.__name__ == aFunc.__name__ and func != aFunc for aFunc, _, _, _ in _PRODREGISTER]):
             raise TypeError('Duplicate production method name "%s"' % func.__name__)
-        _PRODREGISTER.append((func, prod, priority))
+        _PRODREGISTER.append((func, prod, priority, kwargs))
         return func
     return _wrap
 

@@ -90,8 +90,8 @@ class AsyncLRParser(LRParser):
        raise NotImplementedError
 
     @classmethod
-    def _createProductionParser(cls, name, priority):
-        return AsyncProductionParser(asyncCallbackByName(name), priority, cls)
+    def _createProductionParser(cls, name, priority, attrs):
+        return AsyncProductionParser(asyncCallbackByName(name), priority, cls, attrs)
 
     @classmethod
     def _createShiftAction(cls, state):
