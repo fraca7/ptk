@@ -103,8 +103,8 @@ class DeferredLRParser(LRParser):
         raise NotImplementedError
 
     @classmethod
-    def _createProductionParser(cls, name, priority):
-        return DeferredProductionParser(callbackByName(name), priority, cls)
+    def _createProductionParser(cls, name, priority, attributes):
+        return DeferredProductionParser(callbackByName(name), priority, cls, attributes)
 
     @classmethod
     def _createShiftAction(cls, state):
