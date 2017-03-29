@@ -24,15 +24,15 @@ class GrammarUnderTest(Grammar):
         return cls.tokens
 
     @classmethod
-    def _createProductionParser(cls, name, priority):
-        return ProductionParser(callbackByName(name), priority, cls)
+    def _createProductionParser(cls, name, priority, attrs):
+        return ProductionParser(callbackByName(name), priority, cls, attrs)
 
 
 class ProductionParserTestCase(unittest.TestCase):
     def setUp(self):
         class TestGrammar(GrammarUnderTest):
             tokens = set()
-        self.parser = ProductionParser(None, None, TestGrammar)
+        self.parser = ProductionParser(None, None, TestGrammar, dict())
         self.grammarClass = TestGrammar
 
     def assertHasProduction(self, prods, prod):
