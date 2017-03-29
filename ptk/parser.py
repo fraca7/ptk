@@ -13,7 +13,7 @@ from ptk.lexer import ProgressiveLexer, EOF, token
 from ptk.grammar import Grammar, Production, GrammarError
 # production is only imported so that client code doesn't have to import it from grammar
 from ptk.grammar import production # pylint: disable=W0611
-from ptk.utils import Singleton, callbackByName
+from ptk.utils import Singleton, callbackByName, memoize
 
 
 class ParseError(Exception):
@@ -95,17 +95,15 @@ class _ResolveError(Exception):
 
 @functools.total_ordering
 class _Item(object):
+    __slots__ = ('production', 'dot', 'terminal', 'index', 'shouldReduce', 'expecting')
+
     def __init__(self, prod, dot, terminal):
         self.production = prod
         self.dot = dot
         self.terminal = terminal
         self.index = None
-
-    def shouldReduce(self):
-        """
-        Returns True if the dot is in last position
-        """
-        return self.dot == len(self.production.right)
+        self.shouldReduce = self.dot == len(self.production.right)
+        self.expecting = None if self.shouldReduce else self.production.right[self.dot]
 
     def next(self):
         """
@@ -278,8 +276,8 @@ class LRParser(Grammar):
 
     @classmethod
     def __computeStates(cls, start):
-        allSyms = cls.tokenTypes() | cls.nonterminals()
-        goto = dict()
+        allSyms = list(cls.tokenTypes() | cls.nonterminals())
+        goto = list()
         cls._startState = frozenset([_Item(start, 0, EOF)])
         states = set([cls._startState])
         stack = [cls._startState]
@@ -288,31 +286,28 @@ class LRParser(Grammar):
             stateClosure = cls.__itemSetClosure(state)
             for symbol in allSyms:
                 # Compute goto(symbol, state)
-                nextState = set()
-                for item in stateClosure:
-                    if not item.shouldReduce() and item.production.right[item.dot] == symbol:
-                        nextState.add(item.next())
+                nextState = frozenset([item.next() for item in stateClosure if item.expecting == symbol])
                 if nextState:
-                    nextState = frozenset(nextState)
-                    goto[(state, symbol)] = nextState
+                    goto.append(((state, symbol), nextState))
                     if nextState not in states:
                         states.add(nextState)
                         stack.append(nextState)
-        return states, goto
+        return states, dict(goto)
 
     @classmethod
     def __computeActions(cls, states, goto):
         cls.__actions__ = dict()
         reachable = set()
+        tokenTypes = cls.tokenTypes()
         for state in states:
             for item in cls.__itemSetClosure(state):
-                if item.shouldReduce():
+                if item.shouldReduce:
                     action = cls._createReduceAction(item)
                     reachable.add(item.production.name)
                     cls.__addReduceAction(state, item.terminal, action)
                 else:
                     symbol = item.production.right[item.dot]
-                    if symbol in cls.tokenTypes():
+                    if symbol in tokenTypes:
                         cls.__addShiftAction(state, symbol, cls._createShiftAction(goto[(state, symbol)]))
         return reachable
 
@@ -406,11 +401,12 @@ class LRParser(Grammar):
         self.__stack = [_StackItem(self._startState, None)]
 
     @classmethod
+    @memoize
     def __itemSetClosure(cls, items):
         result = set(items)
         while True:
             prev = set(result)
-            for item in [item for item in result if not item.shouldReduce()]:
+            for item in [item for item in result if not item.shouldReduce]:
                 symbol = item.production.right[item.dot]
                 if symbol not in cls.tokenTypes():
                     terminals = cls.first(*tuple(item.production.right[item.dot + 1:] + [item.terminal]))
