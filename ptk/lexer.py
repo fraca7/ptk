@@ -38,6 +38,12 @@ def token(rx, types=None):
     return _wrap
 
 
+class SkipToken(Exception):
+    """
+    Raise this from your consumer to ignore the token.
+    """
+
+
 class LexerError(Exception):
     """
     Unrecognized token in input
@@ -166,6 +172,9 @@ class LexerBase(six.with_metaclass(_LexerMeta, object)):
                                self.value.write(char)
                                self.state = 0
                    self.setConsumer(CString())
+
+        You can also raise SkipToken instead of returning a token if it
+        is to be ignored (comments).
         """
         self._consumer = consumer
 
@@ -239,11 +248,15 @@ class ReLexer(LexerBase): # pylint: disable=W0223
                     continue
                 pos = self._findMatch(string, pos)
             else:
-                tok = self.consumer().feed(char)
-                if tok is not None:
+                try:
+                    tok = self.consumer().feed(char)
+                except SkipToken:
                     self.setConsumer(None)
-                    if tok[0] is not None:
-                        self.newToken(self.Token(*tok))
+                else:
+                    if tok is not None:
+                        self.setConsumer(None)
+                        if tok[0] is not None:
+                            self.newToken(self.Token(*tok))
                 pos += 1
         return pos
 
@@ -318,11 +331,15 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
             self.advanceColumn()
 
         if self.consumer() is not None:
-            tok = self.consumer().feed(char)
-            if tok is not None:
+            try:
+                tok = self.consumer().feed(char)
+            except SkipToken:
                 self.setConsumer(None)
-                if tok[0] is not None:
-                    yield self.Token(*tok)
+            else:
+                if tok is not None:
+                    self.setConsumer(None)
+                    if tok[0] is not None:
+                        yield self.Token(*tok)
             return
 
         try:
