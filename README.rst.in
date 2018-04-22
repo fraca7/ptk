@@ -2,7 +2,7 @@
 Parser Toolkit
 ==============
 
-PTK - (c) Jérôme Laheurte 2015
+PTK - (c) Jérôme Laheurte 2015-2018
 
 .. contents:: **Table of contents**
 
@@ -138,6 +138,11 @@ The full documentation is hosted `here <http://ptk.readthedocs.io/en/release-%(v
 
 Changelog
 ---------
+
+Version 1.3.5:
+
+- Update copyright notices
+- Fix some packaging issues
 
 Version 1.3.4:
 

@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-# (c) Jérôme Laheurte 2015
+# (c) Jérôme Laheurte 2015-2018
 # See LICENSE.txt
 
 from ptk.lexer import ProgressiveLexer, token, EOF, LexerError # pylint: disable=W0611
