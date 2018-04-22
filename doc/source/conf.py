@@ -18,7 +18,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 project = PackageInfo.project_name
-copyright = six.u('2015, %s') % PackageInfo.author_name
+copyright = six.u('2018, %s') % PackageInfo.author_name
 author = PackageInfo.author_name
 release = version
 language = None

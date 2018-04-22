@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-# (c) Jérôme Laheurte 2015
+# (c) Jérôme Laheurte 2015-2018
 # See LICENSE.txt
 
 from ptk.parser import production, LRParser, ProductionParser, leftAssoc, rightAssoc, nonAssoc, ParseError, _Accept, _Reduce, _Shift # pylint: disable=W0611

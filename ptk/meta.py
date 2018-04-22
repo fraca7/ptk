@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-
 
-# (c) Jérôme Laheurte 2015
+# (c) Jérôme Laheurte 2015-2018
 # See LICENSE.txt
 
 import six
 
 
 class PackageInfo(object):
-    version = six.u('1.3.4')
+    version = six.u('1.3.5')
     version_info = map(int, version.split(six.u('.')))
 
     project_name = six.u('ptk')
