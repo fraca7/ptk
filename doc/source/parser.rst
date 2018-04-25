@@ -247,7 +247,7 @@ The :py:class:`AsyncLexer` and :py:class:`AsyncLRParser` classes allow
 you to parse an input stream asynchronously. Since this uses the new
 asynchronous method syntax introduced in Python 3.5, it's only
 available with this version of Python. Additionally, you must install
-the `async_generator <https://github.com/njsmith/async_generator>`_ module.
+the `async_generator <https://github.com/python-trio/async_generator>`_ module.
 
 The basic idea is that the production methods are asynchronous. Feed
 the input stream one byte/char at a time by awaiting on
