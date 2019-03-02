@@ -78,10 +78,10 @@ class BytesProtocol(Protocol):
         # We don't want more bytes to be handled while this is running.
         self.transport.pauseProducing()
 
-        bytes = list(data)
+        thebytes = list(data)
         def next(result):
-            if bytes:
-                char = self.decoder.decode(bytes.pop(0))
+            if thebytes:
+                char = self.decoder.decode(bytes([thebytes.pop(0)]))
                 if char:
                     if char == '\n':
                         char = EOF
