@@ -23,7 +23,7 @@ coverage:
 	$(PYTHON) -m coverage html
 
 lint:
-	-$(PYTHON) -m pylint ptk > lint.html
+	-$(PYTHON) -m pylint ptk
 
 nuke:
 	hg purge --all
