@@ -128,12 +128,12 @@ class RegexParserBytesTestCase(RegexParserTestCaseMixin, unittest.TestCase):
     def _parse(self, rx):
         if isinstance(rx, str):
             rx = rx.encode('UTF-8')
-        return super(RegexParserBytesTestCase, self)._parse(rx)
+        return super()._parse(rx)
 
     def _match(self, rx, s):
         if isinstance(s, str):
             s = s.encode('UTF-8')
-        return super(RegexParserBytesTestCase, self)._match(rx, s)
+        return super()._match(rx, s)
 
 
 if __name__ == '__main__':

@@ -115,7 +115,7 @@ class _GrammarMeta(_LexerMeta):
             attrs['__precedence__'] = list()
             attrs['__prepared__'] = False
             attrs['__lrstates__'] = list()
-            klass = super(_GrammarMeta, metacls).__new__(metacls, name, bases, attrs)
+            klass = super().__new__(metacls, name, bases, attrs)
             for func, string, priority, attrs in _PRODREGISTER:
                 parser = klass._createProductionParser(func.__name__, priority, attrs) # pylint: disable=W0212
                 parser.parse(string)
@@ -146,8 +146,7 @@ class Grammar(metaclass=_GrammarMeta):
 
     def __init__(self):
         # pylint: disable=R0912
-        super(Grammar, self).__init__()
-
+        super().__init__()
         if not self.__prepared__:
             self.prepare()
 
@@ -250,8 +249,3 @@ class Grammar(metaclass=_GrammarMeta):
         else:
             first.add(Epsilon)
         return first
-
-    @classmethod
-    def tokenTypes(cls):
-        # Shut up pylint
-        return super(Grammar, cls).tokenTypes() # pylint: disable=E1101

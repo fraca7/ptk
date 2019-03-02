@@ -74,7 +74,7 @@ class YaccParser(LRParser, ReLexer):
     def __init__(self, options, stream):
         self.stream = stream
         self.options = options
-        super(YaccParser, self).__init__()
+        super().__init__()
 
         self.state = 0
         self.yaccStartSymbol = None

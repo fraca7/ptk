@@ -17,7 +17,7 @@ from twisted.internet.defer import succeed
 class TestedDeferredParser(DeferredLRParser, DeferredLexer):
     def __init__(self, *args, **kwargs):
         self.seen = list()
-        super(TestedDeferredParser, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @token('[1-9][0-9]*')
     def number(self, tok):
@@ -76,7 +76,7 @@ class DefaultReduceReduceDeferredTestCase(DeferredParserTestCase):
         class Parser(DeferredLRParser, DeferredLexer):
             def __init__(self, *args, **kwargs):
                 self.seen = list()
-                super(Parser, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
             @token('[a-zA-Z]+')
             def word(self, tok):
                 pass
@@ -158,7 +158,7 @@ class OverridePrecedenceDeferredTestCase(DeferredParserTestCase):
         class Parser(DeferredLRParser, DeferredLexer):
             def __init__(self, *args, **kwargs):
                 self.seen = list()
-                super(Parser, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
             @token('[1-9][0-9]*')
             def number(self, tok):
                 tok.value = int(tok.value)
@@ -191,7 +191,7 @@ class ListDeferredTestCase(DeferredParserTestCase):
     def setUp(self):
         class Parser(DeferredLRParser, DeferredLexer):
             def __init__(self, testCase):
-                super(Parser, self).__init__()
+                super().__init__()
                 self.testCase = testCase
             @token('[a-z]+')
             def identifier(self, tok):
@@ -219,7 +219,7 @@ class NonEmptyListDeferredTestCase(DeferredParserTestCase):
     def setUp(self):
         class Parser(DeferredLRParser, DeferredLexer):
             def __init__(self, testCase):
-                super(Parser, self).__init__()
+                super().__init__()
                 self.testCase = testCase
             @token('[a-z]+')
             def identifier(self, tok):
@@ -251,7 +251,7 @@ class SeparatorListDeferredTestCase(DeferredParserTestCase):
     def setUp(self):
         class Parser(DeferredLRParser, DeferredLexer):
             def __init__(self, testCase):
-                super(Parser, self).__init__()
+                super().__init__()
                 self.testCase = testCase
             @token('[a-z]+')
             def identifier(self, tok):
@@ -275,7 +275,7 @@ class AtMostOneDeferredTestCase(DeferredParserTestCase):
     def setUp(self):
         class Parser(DeferredLRParser, DeferredLexer):
             def __init__(self, testCase):
-                super(Parser, self).__init__()
+                super().__init__()
                 self.testCase = testCase
             @token('[a-z]+')
             def identifier(self, tok):

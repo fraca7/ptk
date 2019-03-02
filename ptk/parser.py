@@ -23,7 +23,7 @@ class ParseError(Exception):
     """
     def __init__(self, grammar, tok, state):
         self.token = tok
-        super(ParseError, self).__init__('Unexpected token "%s" (%s) in state "%s"' % (tok.value, tok.type, sorted(state)))
+        super().__init__('Unexpected token "%s" (%s) in state "%s"' % (tok.value, tok.type, sorted(state)))
 
         self._expecting = set()
         for terminal in grammar.tokenTypes():
@@ -128,7 +128,7 @@ class _Item(object):
 class _Accept(BaseException):
     def __init__(self, result):
         self.result = result
-        super(_Accept, self).__init__()
+        super().__init__()
 
 
 _StackItem = collections.namedtuple('_StackItem', ['state', 'value'])
@@ -179,7 +179,7 @@ class LRParser(Grammar):
 
     """
     def __init__(self): # pylint: disable=R0914,R0912
-        super(LRParser, self).__init__()
+        super().__init__()
         self._restartParser()
 
     def rstack(self):
@@ -238,7 +238,7 @@ class LRParser(Grammar):
             cls.__productions__.insert(0, prod)
 
         cls.startSymbol = _StartState
-        super(LRParser, cls).prepare()
+        super().prepare()
 
         states, goto = cls.__computeStates(prod)
         reachable = cls.__computeActions(states, goto)
@@ -425,7 +425,7 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
         self.grammarClass = grammarClass
         self.attributes = attributes
 
-        super(ProductionParser, self).__init__()
+        super().__init__()
 
     @classmethod
     def prepare(cls, **kwargs): # pylint: disable=R0915
@@ -519,7 +519,7 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
         prod.addSymbol('rchev')
         cls.__productions__.append(prod)
 
-        super(ProductionParser, cls).prepare(**kwargs)
+        super().prepare(**kwargs)
 
     def newSentence(self, startSymbol):
         name, prods = startSymbol

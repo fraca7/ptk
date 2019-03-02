@@ -20,7 +20,7 @@ class _LexerMeta(type):
         global _TOKREGISTER # pylint: disable=W0603
         try:
             attrs['__tokens__'] = (set(), list()) # Set of token names, list of (rx, callback, defaultType)
-            klass = super(_LexerMeta, metacls).__new__(metacls, name, bases, attrs)
+            klass = super().__new__(metacls, name, bases, attrs)
             for func, rx, toktypes in _TOKREGISTER:
                 klass.addTokenType(func.__name__, callbackByName(func.__name__), rx, toktypes)
             return klass
@@ -51,7 +51,7 @@ class LexerError(Exception):
     :ivar colno: Column in input
     """
     def __init__(self, char, colno, lineno):
-        super(LexerError, self).__init__('Unrecognized token "%s" at line %d, column %d' % (char, lineno, colno))
+        super().__init__('Unrecognized token "%s" at line %d, column %d' % (char, lineno, colno))
         self.lineno = lineno
         self.colno = colno
 
@@ -98,7 +98,7 @@ class LexerBase(metaclass=_LexerMeta):
             return EOF if EOF in [self.type, self.value] else RegexTokenizer.Token(self.type, self.value)
 
     def __init__(self):
-        super(LexerBase, self).__init__()
+        super().__init__()
         self.restartLexer()
 
     def restartLexer(self, resetPos=True):
@@ -229,7 +229,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
         for rx, callback, defaultType in self._allTokens()[1]:
             crx = re.compile((b'^' if isinstance(rx, bytes) else '^') + rx)
             self._regexes.append((crx, callback, defaultType))
-        super(ReLexer, self).__init__()
+        super().__init__()
 
     def _parse(self, string, pos):
         while pos < len(string):
@@ -302,7 +302,7 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
         self._maxPos = 0
         self._state = 0
         self._input = list()
-        super(ProgressiveLexer, self).restartLexer(resetPos=resetPos)
+        super().restartLexer(resetPos=resetPos)
 
     def parse(self, string):
         for char in string:
