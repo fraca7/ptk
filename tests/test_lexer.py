@@ -10,7 +10,7 @@ from ptk.lexer import ProgressiveLexer, ReLexer
 class LexerUnderTestMixin(object):
     def __init__(self, testCase):
         self.testCase = testCase
-        super(LexerUnderTestMixin, self).__init__()
+        super().__init__()
 
     def newToken(self, tok):
         self.testCase.feed(tok)
@@ -46,7 +46,7 @@ class ReLexerTestCase(LexerTestCase):
 
 class LexerBasicTestCaseMixin(object):
     def setUp(self):
-        super(LexerBasicTestCaseMixin, self).setUp()
+        super().setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @token('[a-zA-Z]+')
             def ID(self, tok):
@@ -104,7 +104,7 @@ class ReLexerBasicTestCase(LexerBasicTestCaseMixin, ReLexerTestCase):
 
 class PositionTestCaseMixin(object):
     def setUp(self):
-        super(PositionTestCaseMixin, self).setUp()
+        super().setUp()
         class TestedLexer(self.lexerClass):
             @staticmethod
             def ignore(char):
@@ -137,11 +137,11 @@ class ReLexerPositionTestCase(PositionTestCaseMixin, ReLexerTestCase):
 
 class TokenTypeTestCaseMixin(object):
     def setUp(self):
-        super(TokenTypeTestCaseMixin, self).setUp()
+        super().setUp()
         class TestedLexer(self.lexerClass):
             def __init__(self, testCase):
                 self.testCase = testCase
-                super(TestedLexer, self).__init__()
+                super().__init__()
             @token('[a-z]', types=['LETTER'])
             def letter(self, tok):
                 self.testCase.assertTrue(tok.type is None)
@@ -170,7 +170,7 @@ class ReLexerTokenTypeTestCase(TokenTypeTestCaseMixin, ReLexerTestCase):
 
 class LexerByteTestCaseMixin(object):
     def setUp(self):
-        super(LexerByteTestCaseMixin, self).setUp()
+        super().setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @token(b'[a-zA-Z]+')
             def ID(self, tok):
@@ -192,7 +192,7 @@ class ReLexerByteTestCase(LexerByteTestCaseMixin, ReLexerTestCase):
 
 class LexerUnicodeTestCaseMixin(object):
     def setUp(self):
-        super(LexerUnicodeTestCaseMixin, self).setUp()
+        super().setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @token('[a-zA-Z]+')
             def ID(self, tok):
@@ -214,7 +214,7 @@ class ReLexerUnicodeTestCase(LexerUnicodeTestCaseMixin, ReLexerTestCase):
 
 class LexerUnambiguousTestCase(ProgressiveLexerTestCase):
     def setUp(self):
-        super(LexerUnambiguousTestCase, self).setUp()
+        super().setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @token('a')
             def ID(self, tok):
@@ -230,7 +230,7 @@ class LexerUnambiguousTestCase(ProgressiveLexerTestCase):
 
 class LexerConsumerTestCaseMixin(object):
     def setUp(self):
-        super(LexerConsumerTestCaseMixin, self).setUp()
+        super().setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @token('[a-zA-Z0-9]+')
             def ID(self, tok):
@@ -292,7 +292,7 @@ class ReLexerDuplicateTokenNameTestCase(LexerDuplicateTokenNameTestCaseMixin, Re
 
 class LexerInheritanceTestCaseMixin(object):
     def setUp(self):
-        super(LexerInheritanceTestCaseMixin, self).setUp()
+        super().setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @token('[0-9]')
             def digit(self, tok):
@@ -318,7 +318,7 @@ class ReLexerInheritanceTestCase(LexerInheritanceTestCaseMixin, ReLexerTestCase)
 
 class LexerUnterminatedTokenTestCaseMixin(object):
     def setUp(self):
-        super(LexerUnterminatedTokenTestCaseMixin, self).setUp()
+        super().setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @token('abc')
             def ID(self, tok):
@@ -347,7 +347,7 @@ class ReLexerUnterminatedTokenTestCase(LexerUnterminatedTokenTestCaseMixin, ReLe
 
 class LexerLengthTestCaseMixin(object):
     def setUp(self):
-        super(LexerLengthTestCaseMixin, self).setUp()
+        super().setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @token('<|=')
             def LT(self, tok):
@@ -371,7 +371,7 @@ class ReLexerLengthTestCase(LexerLengthTestCaseMixin, ReLexerTestCase):
 
 class LexerPriorityTestCaseMixin(object):
     def setUp(self):
-        super(LexerPriorityTestCaseMixin, self).setUp()
+        super().setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @token('a|b')
             def A(self, tok):
@@ -395,7 +395,7 @@ class ReLexerPriorityTestCase(LexerPriorityTestCaseMixin, ReLexerTestCase):
 
 class LexerRemainingCharactersTestCase(ProgressiveLexerTestCase):
     def setUp(self):
-        super(LexerRemainingCharactersTestCase, self).setUp()
+        super().setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @token('abc')
             def ID1(self, tok):
@@ -411,7 +411,7 @@ class LexerRemainingCharactersTestCase(ProgressiveLexerTestCase):
 
 class LexerEOFTestCaseMixin(object):
     def setUp(self):
-        super(LexerEOFTestCaseMixin, self).setUp()
+        super().setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @token(r'[0-9]+')
             def NUMBER(self, tok):

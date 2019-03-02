@@ -10,7 +10,7 @@ from ptk.grammar import production
 class TestedParser(LRParser, ProgressiveLexer):
     def __init__(self, *args, **kwargs):
         self.seen = list()
-        super(TestedParser, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @token('[1-9][0-9]*')
     def number(self, tok):
@@ -48,7 +48,7 @@ class DefaultReduceReduceTestCase(unittest.TestCase):
         class Parser(LRParser, ProgressiveLexer):
             def __init__(self, *args, **kwargs):
                 self.seen = list()
-                super(Parser, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
             @token('[a-zA-Z]+')
             def word(self, tok):
                 pass
@@ -130,7 +130,7 @@ class OverridePrecedenceTestCase(unittest.TestCase):
         class Parser(LRParser, ProgressiveLexer):
             def __init__(self, *args, **kwargs):
                 self.seen = list()
-                super(Parser, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
             @token('[1-9][0-9]*')
             def number(self, tok):
                 tok.value = int(tok.value)
@@ -185,7 +185,7 @@ class ListTestCase(unittest.TestCase):
     def setUp(self):
         class Parser(LRParser, ProgressiveLexer):
             def __init__(self, testCase):
-                super(Parser, self).__init__()
+                super().__init__()
                 self.testCase = testCase
             @token('[a-z]+')
             def identifier(self, tok):
@@ -212,7 +212,7 @@ class NonEmptyListTestCase(unittest.TestCase):
     def setUp(self):
         class Parser(LRParser, ProgressiveLexer):
             def __init__(self, testCase):
-                super(Parser, self).__init__()
+                super().__init__()
                 self.testCase = testCase
             @token('[a-z]+')
             def identifier(self, tok):
@@ -243,7 +243,7 @@ class SeparatorListTestCase(unittest.TestCase):
     def setUp(self):
         class Parser(LRParser, ProgressiveLexer):
             def __init__(self, testCase):
-                super(Parser, self).__init__()
+                super().__init__()
                 self.testCase = testCase
             @token('[a-z]+')
             def identifier(self, tok):
@@ -266,7 +266,7 @@ class AtMostOneTestCase(unittest.TestCase):
     def setUp(self):
         class Parser(LRParser, ProgressiveLexer):
             def __init__(self, testCase):
-                super(Parser, self).__init__()
+                super().__init__()
                 self.testCase = testCase
             @token('[a-z]+')
             def identifier(self, tok):
@@ -302,7 +302,7 @@ class InheritanceTestCase(unittest.TestCase):
         class Parser(LRParser, ProgressiveLexer):
             def __init__(self):
                 self.seen = None
-                super(Parser, self).__init__()
+                super().__init__()
             @token('[0-9]')
             def digit(self, tok):
                 tok.value = int(tok.value)
