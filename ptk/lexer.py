@@ -1,15 +1,14 @@
 # -*- coding: UTF-8 -*-
 
-# (c) Jérôme Laheurte 2015-2018
+# (c) Jérôme Laheurte 2015-2019
 # See LICENSE.txt
 
-import six
 import inspect
 import re
 import collections
 
 from ptk.regex import buildRegex, DeadState, RegexTokenizer
-from ptk.utils import Singleton, callbackByName
+from ptk.utils import Singleton, callbackByName, chars
 
 
 # In Python 3 we'd use __prepare__ and an ordered dict...
@@ -57,12 +56,12 @@ class LexerError(Exception):
         self.colno = colno
 
 
-class EOF(six.with_metaclass(Singleton, object)):
+class EOF(metaclass=Singleton):
     """
     End symbol
     """
 
-    __reprval__ = six.u('$')
+    __reprval__ = '$'
 
     @property
     def type(self):
@@ -77,7 +76,7 @@ class EOF(six.with_metaclass(Singleton, object)):
 _LexerPosition = collections.namedtuple('_LexerPosition', ['column', 'line'])
 
 
-class LexerBase(six.with_metaclass(_LexerMeta, object)):
+class LexerBase(metaclass=_LexerMeta):
     """
     This defines the interface for lexer classes. For concrete
     implementations, see :py:class:`ProgressiveLexer` and
@@ -137,7 +136,7 @@ class LexerBase(six.with_metaclass(_LexerMeta, object)):
         :param char: The character to test
         :return: True if *char* should be ignored
         """
-        return char in [six.b(' ')[0], six.u(' '), six.b('\t')[0], six.u('\t')]
+        return char in chars(' ') + chars('\t')
 
     def setConsumer(self, consumer):
         """
@@ -228,17 +227,14 @@ class ReLexer(LexerBase): # pylint: disable=W0223
     def __init__(self):
         self._regexes = list()
         for rx, callback, defaultType in self._allTokens()[1]:
-            if six.PY2 and isinstance(rx, str) or six.PY3 and isinstance(rx, bytes):
-                crx = re.compile(six.b('^') + rx)
-            else:
-                crx = re.compile(six.u('^') + rx)
+            crx = re.compile((b'^' if isinstance(rx, bytes) else '^') + rx)
             self._regexes.append((crx, callback, defaultType))
         super(ReLexer, self).__init__()
 
     def _parse(self, string, pos):
         while pos < len(string):
             char = string[pos]
-            if char in (six.u('\n'), six.b('\n')[0]):
+            if char in chars('\n'):
                 self.advanceLine()
             else:
                 self.advanceColumn()
@@ -325,7 +321,7 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
                 self.newToken(tok)
 
     def _feed(self, char, charPos): # pylint: disable=R0912,R0915
-        if char in (six.u('\n'), six.b('\n')[0]):
+        if char in chars('\n'):
             self.advanceLine()
         else:
             self.advanceColumn()
@@ -400,11 +396,8 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
     def _finalizeMatch(self):
         # First declared token method
         matches = set([callback for _, callback in self._matches])
-        if isinstance(self._currentMatch[0][0], six.text_type):
-            sep = six.u('')
-        else:
-            sep = six.b('')
-        match = sep.join([(bytes([char]) if six.PY3 and isinstance(char, int) else char) \
+        sep = '' if isinstance(self._currentMatch[0][0], str) else b''
+        match = sep.join([(bytes([char]) if isinstance(char, int) else char) \
                           for char, pos in self._currentMatch[:self._maxPos]]) # byte or unicode
         remain = self._currentMatch[self._maxPos:]
         self.restartLexer(False)

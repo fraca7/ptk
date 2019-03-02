@@ -2,7 +2,7 @@
 Parser Toolkit
 ==============
 
-PTK - (c) Jérôme Laheurte 2015
+PTK - (c) Jérôme Laheurte 2015-2019
 
 .. contents:: **Table of contents**
 
@@ -49,8 +49,6 @@ All unit tests pass on the following platforms/Python version:
 +-----+-------+-----+---------+
 |     | Linux | OSX | Windows |
 +=====+=======+=====+=========+
-| 2.7 |   X   |  X  |    X    |
-+-----+-------+-----+---------+
 | 3.2 |   X   |     |    X    |
 +-----+-------+-----+---------+
 | 3.3 |       |     |    X    |
@@ -64,10 +62,6 @@ See the
 `Buildbot <https://jeromelaheurte.net/buildbot/ptk/waterfall>`_ for
 details.
 
-Although Python 2.6 is not officially supported, it does work with a
-few minor code modifications, namely replacing
-functools.total_ordering with the `backport to 2.6 <https://pypi.python.org/pypi/total-ordering>`_.
-
 Installation
 ------------
 
@@ -77,9 +71,9 @@ Using pip::
 
 From source::
 
-  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.3.2.tar.gz
-  $ tar xjf ptk-1.3.2.tar.bz2; cd ptk-1.3.2
-  $ sudo python ./setup.py install
+  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.3.5.tar.gz
+  $ tar xjf ptk-1.3.5.tar.bz2; cd ptk-1.3.5
+  $ sudo python3 ./setup.py install
 
 Sample usage
 ------------
@@ -90,7 +84,7 @@ Four-operations integer calculator:
 
    from ptk.parser import LRParser, production, leftAssoc
    from ptk.lexer import ReLexer, token
-   import operator, six
+   import operator
 
    @leftAssoc('+', '-')
    @rightAssoc('*', '/')
@@ -121,7 +115,7 @@ Four-operations integer calculator:
 
    parser = Parser()
    while True:
-       expr = six.moves.input('> ')
+       expr = input('> ')
        print parser.parse(expr)
 
 Code samples
@@ -134,10 +128,28 @@ Python file from a Yacc or Bison grammar file.
 API documentation
 -----------------
 
-The full documentation is hosted `here <http://ptk.readthedocs.io/en/release-1.3.2/>`_.
+The full documentation is hosted `here <http://ptk.readthedocs.io/en/release-1.3.5/>`_.
 
 Changelog
 ---------
+
+Version 1.3.6:
+
+- Drop support for Python 2.
+
+Version 1.3.5:
+
+- Update copyright notices
+- Fix some packaging issues
+
+Version 1.3.4:
+
+- Added SkipToken for consumers
+
+Version 1.3.3:
+
+- Fix a number of problems when working with bytes in Python 3
+- One couldn't mix asynchronous and synchronous parsers in the same program
 
 Version 1.3.2:
 

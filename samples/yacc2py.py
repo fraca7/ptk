@@ -1,13 +1,13 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
 """
 Converts a Yacc/Bison grammar definition into a Python skeleton that uses ptk.
 """
 
+import io
 import getopt
 import sys
-import six
 import collections
 import codecs
 import re
@@ -36,20 +36,20 @@ class Options(object):
                 self.usage()
 
         if self.compact and self.arguments:
-            six.print_('--compact and --arguments are not compatible')
+            print('--compact and --arguments are not compatible')
             self.usage(1)
 
         if self.filename is None:
-            six.print_('Output file not specified')
+            print('Output file not specified')
             self.usage(1)
 
     def usage(self, exitCode=0):
-        six.print_('Usage: %s [options] filename' % sys.argv[0])
-        six.print_('Options:')
-        six.print_('  -h, --help      Print this')
-        six.print_('  -c, --compact   Create one method for all alternatives of a production')
-        six.print_('  -o, --output <filename> Output to file (mandatory)')
-        six.print_('  -a, --arguments Generate argument names for items in productions (incompatible with --compact)')
+        print('Usage: %s [options] filename' % sys.argv[0])
+        print('Options:')
+        print('  -h, --help      Print this')
+        print('  -c, --compact   Create one method for all alternatives of a production')
+        print('  -o, --output <filename> Output to file (mandatory)')
+        print('  -a, --arguments Generate argument names for items in productions (incompatible with --compact)')
         sys.exit(exitCode)
 
     @staticmethod
@@ -128,7 +128,7 @@ class YaccParser(LRParser, ReLexer):
         class StringParser(object):
             def __init__(self):
                 self.state = 0
-                self.value = six.StringIO()
+                self.value = io.StringIO()
             def feed(self, char):
                 if self.state == 0:
                     if char == '"':
@@ -149,7 +149,7 @@ class YaccParser(LRParser, ReLexer):
             def __init__(self):
                 self.state = 0
                 self.count = 1
-                self.value = six.StringIO()
+                self.value = io.StringIO()
                 self.value.write('{')
 
             def feed(self, char):
@@ -335,10 +335,10 @@ def main(filename):
             try:
                 parser.parse(fileobj.read())
             except ParseError as exc:
-                six.print_('Parse error: %s' % exc)
+                print('Parse error: %s' % exc)
                 tokens = exc.expecting()
                 if tokens:
-                    six.print_('Was expecting %s' % ', '.join(map(repr, sorted(tokens))))
+                    print('Was expecting %s' % ', '.join(map(repr, sorted(tokens))))
                 sys.exit(1)
             finally:
                 print('== Parsed file in %d ms.' % int(1000 * (time.time() - t0)))

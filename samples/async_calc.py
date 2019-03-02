@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
 """
@@ -11,7 +11,7 @@ $ echo '3*4+6' | python3 ./async_calc.py
 
 """
 
-import six, operator, os, asyncio, sys, codecs
+import operator, os, asyncio, sys, codecs
 
 from ptk.async_lexer import token, AsyncLexer, EOF
 from ptk.async_parser import production, leftAssoc, AsyncLRParser, ParseError
@@ -21,7 +21,7 @@ from ptk.async_parser import production, leftAssoc, AsyncLRParser, ParseError
 @leftAssoc('*', '/')
 class Parser(AsyncLRParser, AsyncLexer):
     async def asyncNewSentence(self, result):
-        six.print_('== Result:', result)
+        print('== Result:', result)
 
     # Lexer
     def ignore(self, char):
@@ -35,7 +35,7 @@ class Parser(AsyncLRParser, AsyncLexer):
 
     @production('E -> "-" E<value>', priority='*')
     async def minus(self, value):
-        six.print_('== Neg: - %d' % value)
+        print('== Neg: - %d' % value)
         return -value
 
     @production('E -> "(" E<value> ")"')
@@ -51,7 +51,7 @@ class Parser(AsyncLRParser, AsyncLexer):
     @production('E -> E<left> "*"<op> E<right>')
     @production('E -> E<left> "/"<op> E<right>')
     async def binaryop(self, left, op, right):
-        six.print_('Binary operation: %s %s %s' % (left, op, right))
+        print('Binary operation: %s %s %s' % (left, op, right))
         return {
             '+': operator.add,
             '-': operator.sub,
@@ -76,7 +76,7 @@ async def main():
             if char == '\n':
                 char = EOF
             else:
-                six.print_('Input char: "%s"' % repr(char))
+                print('Input char: "%s"' % repr(char))
             await parser.asyncFeed(char)
 
 

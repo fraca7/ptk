@@ -1,9 +1,7 @@
-#!/usr/bin/env python
-
-import six
+#!/usr/bin/env python3
 
 import base, unittest, copy
-from ptk.utils import memoize, Singleton
+from ptk.utils import memoize, Singleton, chars
 
 
 # I don't know what discover does, but it makes this test fail...
@@ -24,8 +22,8 @@ from ptk.utils import memoize, Singleton
 ##         self.assertEqual(self.calls, [42, 13])
 
 
-class SingletonUnderTest(six.with_metaclass(Singleton, object)):
-    __reprval__ = six.u('$')
+class SingletonUnderTest(metaclass=Singleton):
+    __reprval__ = '$'
 
     def __init__(self):
         self.value = 42
@@ -54,6 +52,16 @@ class SingletonTestCase(unittest.TestCase):
 
     def test_eq(self):
         self.assertNotEqual(SingletonUnderTest, SingletonUnderTest.__class__())
+
+
+class CharsTestCase(unittest.TestCase):
+    def test_str(self):
+        self.assertTrue('*' in chars('*'))
+
+    def test_bytes(self):
+        for byte in b'*':
+            self.assertTrue(byte in chars('*'))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import six
 import base, unittest
 
 from ptk.regex import RegularExpression, LitteralCharacterClass
@@ -74,12 +73,12 @@ class RegexTestMixin(object):
 
 class UnicodeRegexTest(RegexTestMixin, unittest.TestCase):
     def t(self, s):
-        return s.decode('ascii') if six.PY2 else s
+        return s
 
 
 class BytesRegexTest(RegexTestMixin, unittest.TestCase):
     def t(self, s):
-        return s.encode('ascii') if six.PY3 else s
+        return s.encode('ascii')
 
 
 if __name__ == '__main__':

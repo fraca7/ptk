@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-# (c) Jérôme Laheurte 2015-2018
+# (c) Jérôme Laheurte 2015-2019
 # See LICENSE.txt
 
 """
@@ -9,7 +9,6 @@ Grammar class and define a method decorated with 'production' for each
 production.
 """
 
-import six
 import copy
 import functools
 import inspect
@@ -19,11 +18,11 @@ from ptk.lexer import EOF, _LexerMeta
 from ptk.utils import memoize, Singleton
 
 
-class Epsilon(six.with_metaclass(Singleton, object)):
+class Epsilon(metaclass=Singleton):
     """
     Empty production
     """
-    __reprval__ = six.u('\u03B5') if six.PY3 else six.u('(epsilon)')
+    __reprval__ = '\u03B5'
 
 
 class GrammarError(Exception):
@@ -98,7 +97,7 @@ class Production(object):
         return (self.name, self.right) < (other.name, other.right)
 
     def __repr__(self): # pragma: no cover
-        return six.u('%s -> %s') % (self.name, six.u(' ').join([repr(p) for p in self.right]) if self.right else repr(Epsilon))
+        return '%s -> %s' % (self.name, ' '.join([repr(p) for p in self.right]) if self.right else repr(Epsilon))
 
     def __hash__(self):
         return hash((self.name, tuple(self.right)))
@@ -134,7 +133,7 @@ def production(prod, priority=None, **kwargs):
     return _wrap
 
 
-class Grammar(six.with_metaclass(_GrammarMeta, object)):
+class Grammar(metaclass=_GrammarMeta):
     """
     Base class for a context-free grammar
     """

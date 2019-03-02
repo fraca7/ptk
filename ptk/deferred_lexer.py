@@ -1,12 +1,11 @@
 # -*- coding: UTF-8 -*-
 
-# (c) Jérôme Laheurte 2015-2018
+# (c) Jérôme Laheurte 2015-2019
 # See LICENSE.txt
 
 from ptk.lexer import ProgressiveLexer, token, EOF, LexerError # pylint: disable=W0611
 
 from twisted.internet.defer import Deferred
-import six
 
 
 class DeferredLexer(ProgressiveLexer):
@@ -34,7 +33,7 @@ class DeferredLexer(ProgressiveLexer):
                 tokens = self._feed(char, charPos)
                 def gotToken(result): # pylint: disable=W0613
                     try:
-                        tok = six.next(tokens)
+                        tok = tokens.__next__()
                     except StopIteration:
                         nextInput(None)
                     else:

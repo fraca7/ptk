@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-# (c) Jérôme Laheurte 2015-2018
+# (c) Jérôme Laheurte 2015-2019
 # See LICENSE.txt
 
 from ptk.parser import production, LRParser, ProductionParser, leftAssoc, rightAssoc, nonAssoc, ParseError, _Accept, _Reduce, _Shift # pylint: disable=W0611
@@ -8,7 +8,6 @@ from ptk.utils import callbackByName
 
 from twisted.internet.defer import succeed, Deferred, maybeDeferred
 from twisted.python.failure import Failure
-import six
 
 
 class _DeferShift(_Shift):
@@ -81,7 +80,7 @@ class DeferredLRParser(LRParser):
                 return result
 
             try:
-                action, stack = six.next(actions)
+                action, stack = actions.__next__()
             except StopIteration:
                 d.callback(None)
             else:

@@ -1,11 +1,11 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
 """
 Simple four operations calculator.
 """
 
-import six, operator
+import operator
 
 from ptk.lexer import ReLexer, token
 from ptk.parser import LRParser, leftAssoc, production, ParseError
@@ -15,7 +15,7 @@ from ptk.parser import LRParser, leftAssoc, production, ParseError
 @leftAssoc('*', '/')
 class SimpleCalc(LRParser, ReLexer):
     def newSentence(self, result):
-        six.print_('== Result:', result)
+        print('== Result:', result)
 
     # Lexer
     def ignore(self, char):
@@ -29,7 +29,7 @@ class SimpleCalc(LRParser, ReLexer):
 
     @production('E -> "-" E<value>', priority='*')
     def minus(self, value):
-        six.print_('== Neg: - %d' % value)
+        print('== Neg: - %d' % value)
         return -value
 
     @production('E -> "(" E<value> ")"')
@@ -45,7 +45,7 @@ class SimpleCalc(LRParser, ReLexer):
     @production('E -> E<left> "*"<op> E<right>')
     @production('E -> E<left> "/"<op> E<right>')
     def binaryop(self, left, op, right):
-        six.print_('Binary operation: %s %s %s' % (left, op, right))
+        print('Binary operation: %s %s %s' % (left, op, right))
         return {
             '+': operator.add,
             '-': operator.sub,
@@ -58,17 +58,17 @@ if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.WARNING, format='%(asctime)-15s %(levelname)-8s %(name)-15s %(message)s')
 
-    six.print_('Enter an arithmetic expression.')
+    print('Enter an arithmetic expression.')
 
     parser = SimpleCalc()
     while True:
         try:
-            line = six.moves.input('> ')
+            line = input('> ')
         except (KeyboardInterrupt, EOFError):
-            six.print_()
+            print()
             break
         try:
             parser.parse(line)
         except ParseError as exc:
-            six.print_('Parse error: %s' % exc)
-            six.print_('Expected %s' % exc.expecting())
+            print('Parse error: %s' % exc)
+            print('Expected %s' % exc.expecting())

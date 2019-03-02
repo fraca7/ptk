@@ -1,9 +1,8 @@
 # -*- coding: UTF-8 -*-
 
-# (c) Jérôme Laheurte 2015-2018
+# (c) Jérôme Laheurte 2015-2019
 # See LICENSE.txt
 
-import six
 import functools
 import collections
 import logging
@@ -24,7 +23,7 @@ class ParseError(Exception):
     """
     def __init__(self, grammar, tok, state):
         self.token = tok
-        super(ParseError, self).__init__(six.u('Unexpected token "%s" (%s) in state "%s"') % (tok.value, tok.type, sorted(state)))
+        super(ParseError, self).__init__('Unexpected token "%s" (%s) in state "%s"' % (tok.value, tok.type, sorted(state)))
 
         self._expecting = set()
         for terminal in grammar.tokenTypes():
@@ -85,8 +84,8 @@ def nonAssoc(*operators):
     return _wrapper
 
 
-class _StartState(six.with_metaclass(Singleton, object)):
-    __reprval__ = six.u('\u03A3') if six.PY3 else six.u('(START)')
+class _StartState(metaclass=Singleton):
+    __reprval__ = '\u03A3'
 
 
 class _ResolveError(Exception):
@@ -113,8 +112,8 @@ class _Item(object):
 
     def __repr__(self):
         symbols = list(self.production.right)
-        symbols.insert(self.dot, six.u('\u2022') if six.PY3 else six.u('.'))
-        return six.u('%s -> %s (%s)') % (self.production.name, six.u(' ').join([repr(sym) for sym in symbols]), self.terminal)
+        symbols.insert(self.dot, '\u2022')
+        return '%s -> %s (%s)' % (self.production.name, ' '.join([repr(sym) for sym in symbols]), self.terminal)
 
     def __eq__(self, other):
         return (self.production, self.dot, self.terminal) == (other.production, other.dot, other.terminal)
@@ -638,8 +637,8 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
         prod.callback = callback
 
     def __addList(self, productions, prod, symbol, name, allowEmpty, sep):
-        class ListSymbol(six.with_metaclass(Singleton, object)):
-            __reprval__ = six.u('List(%s, "%s")') % (symbol, six.u('*') if allowEmpty else six.u('+'))
+        class ListSymbol(metaclass=Singleton):
+            __reprval__ = 'List(%s, "%s")' % (symbol, '*' if allowEmpty else '+')
 
         if allowEmpty:
             clone = prod.cloned()

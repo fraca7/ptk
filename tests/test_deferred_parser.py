@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import six
 import base, unittest
 
 from ptk.parser import ParseError, leftAssoc, rightAssoc, nonAssoc
@@ -20,16 +19,16 @@ class TestedDeferredParser(DeferredLRParser, DeferredLexer):
         self.seen = list()
         super(TestedDeferredParser, self).__init__(*args, **kwargs)
 
-    @token(six.u('[1-9][0-9]*'))
+    @token('[1-9][0-9]*')
     def number(self, tok):
         tok.value = int(tok.value)
 
-    @production(six.u('E -> E<left> "+" E<right>'))
+    @production('E -> E<left> "+" E<right>')
     def sum(self, left, right):
         self.seen.append(('+', left, right))
         return succeed(left + right)
 
-    @production(six.u('E -> E<left> "*" E<right>'))
+    @production('E -> E<left> "*" E<right>')
     def mult(self, left, right):
         self.seen.append(('*', left, right))
         return succeed(left * right)
@@ -69,7 +68,7 @@ class DefaultShiftReduceDeferredTestCase(DeferredParserTestCase):
         self.parser = TestedDeferredParser()
 
     def test_shift(self):
-        self.parse(six.u('2+3*4'))
+        self.parse('2+3*4')
         self.assertEqual(self.parser.seen, [('*', 3, 4), ('+', 2, 12)])
 
 class DefaultReduceReduceDeferredTestCase(DeferredParserTestCase):
@@ -78,13 +77,13 @@ class DefaultReduceReduceDeferredTestCase(DeferredParserTestCase):
             def __init__(self, *args, **kwargs):
                 self.seen = list()
                 super(Parser, self).__init__(*args, **kwargs)
-            @token(six.u('[a-zA-Z]+'))
+            @token('[a-zA-Z]+')
             def word(self, tok):
                 pass
-            @production(six.u('sequence -> maybeword | sequence word |'))
+            @production('sequence -> maybeword | sequence word |')
             def seq(self):
                 self.seen.append('seq')
-            @production(six.u('maybeword -> word |'))
+            @production('maybeword -> word |')
             def maybe(self):
                 self.seen.append('maybe')
             def deferNewSentence(self, sentence):
@@ -93,7 +92,7 @@ class DefaultReduceReduceDeferredTestCase(DeferredParserTestCase):
         self.parser = Parser()
 
     def test_reduce(self):
-        self.parse(six.u(''))
+        self.parse('')
         self.assertEqual(self.parser.seen, ['seq'])
 
 
@@ -106,7 +105,7 @@ class LeftAssociativityDeferredTestCase(DeferredParserTestCase):
         self.parser = Parser()
 
     def test_assoc(self):
-        self.parse(six.u('1+2+3'))
+        self.parse('1+2+3')
         self.assertEqual(self.parser.seen, [('+', 1, 2), ('+', 3, 3)])
 
 
@@ -119,7 +118,7 @@ class RightAssociativityDeferredTestCase(DeferredParserTestCase):
         self.parser = Parser()
 
     def test_assoc(self):
-        self.parse(six.u('1+2+3'))
+        self.parse('1+2+3')
         self.assertEqual(self.parser.seen, [('+', 2, 3), ('+', 1, 5)])
 
 
@@ -129,7 +128,7 @@ class PrecedenceDeferredTestCase(DeferredParserTestCase):
         @leftAssoc('*')
         @nonAssoc('<')
         class Parser(TestedDeferredParser):
-            @production(six.u('E -> E "<" E'))
+            @production('E -> E "<" E')
             def inf(self):
                 return succeed(None)
 
@@ -160,18 +159,18 @@ class OverridePrecedenceDeferredTestCase(DeferredParserTestCase):
             def __init__(self, *args, **kwargs):
                 self.seen = list()
                 super(Parser, self).__init__(*args, **kwargs)
-            @token(six.u('[1-9][0-9]*'))
+            @token('[1-9][0-9]*')
             def number(self, tok):
                 tok.value = int(tok.value)
-            @production(six.u('E -> E<left> "+" E<right>'))
+            @production('E -> E<left> "+" E<right>')
             def sum(self, left, right):
                 self.seen.append(('+', left, right))
                 return succeed(left + right)
-            @production(six.u('E -> E<left> "*" E<right>'), priority='mult')
+            @production('E -> E<left> "*" E<right>', priority='mult')
             def mult(self, left, right):
                 self.seen.append(('*', left, right))
                 return succeed(left * right)
-            @production(six.u('E -> number<n>'))
+            @production('E -> number<n>')
             def litteral(self, n):
                 return succeed(n)
             def deferNewSentence(self, sentence):
