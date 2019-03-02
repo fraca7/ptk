@@ -1,14 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
+
+import codecs
 
 from ptk.meta import PackageInfo
 
 def generateReadme():
-    with open('README.rst.in', 'rb') as src:
-        contents = src.read().decode('UTF-8')
+    with codecs.getreader('utf-8')(open('README.rst.in', 'rb')) as src:
+        contents = src.read()
         contents = contents % PackageInfo.__dict__
-        with open('README.rst', 'wb') as dst:
-            dst.write(contents.encode('UTF-8'))
+        with codecs.getwriter('utf-8')(open('README.rst', 'wb')) as dst:
+            dst.write(contents)
 
 
 def prepare():

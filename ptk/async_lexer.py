@@ -1,15 +1,14 @@
 # -*- coding: UTF-8 -*-
 
-# (c) Jérôme Laheurte 2015-2018
+# (c) Jérôme Laheurte 2015-2019
 # See LICENSE.txt
 
 # XXXTODO: when pylint supports async, remove this...
 # pylint: skip-file
 
-import six
-
 from ptk.lexer import ProgressiveLexer, token, EOF, LexerError
 from ptk.regex import DeadState
+from ptk.utils import chars
 
 try:
     from async_generator import aclosing, async_generator, yield_, yield_from_
@@ -72,7 +71,7 @@ class AsyncLexer(ProgressiveLexer):
     @async_generator
     async def _asyncFeed(self, char, charPos): # pylint: disable=R0912,R0915
         # Unfortunately this is copy/pasted from ProgressiveLexer._feed to add the async stuff...
-        if char in (six.u('\n'), six.b('\n')[0]):
+        if char in chars('\n'):
             self.advanceLine()
         else:
             self.advanceColumn()

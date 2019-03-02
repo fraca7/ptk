@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import six
+import io
 import base, unittest
 
 from ptk.lexer import LexerError, token, EOF
@@ -172,14 +172,14 @@ class LexerByteTestCaseMixin(object):
     def setUp(self):
         super(LexerByteTestCaseMixin, self).setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
-            @token(six.b('[a-zA-Z]+'))
+            @token(b'[a-zA-Z]+')
             def ID(self, tok):
                 pass
         self.lexer = TestedLexer(self)
 
     def test_byte_regex_gives_byte_token_value(self):
-        tok, = self.doLex(six.b('foo'))
-        self.assertTrue(isinstance(tok.value, six.binary_type))
+        tok, = self.doLex(b'foo')
+        self.assertTrue(isinstance(tok.value, bytes))
 
 
 class ProgressiveLexerByteTestCase(LexerByteTestCaseMixin, ProgressiveLexerTestCase):
@@ -194,17 +194,14 @@ class LexerUnicodeTestCaseMixin(object):
     def setUp(self):
         super(LexerUnicodeTestCaseMixin, self).setUp()
         class TestedLexer(LexerUnderTestMixin, self.lexerClass):
-            @token(six.u('[a-zA-Z]+'))
+            @token('[a-zA-Z]+')
             def ID(self, tok):
                 pass
         self.lexer = TestedLexer(self)
 
     def test_unicode_regex_gives_unicode_token_value(self):
-        tok, = self.doLex(six.u('foo'))
-        if six.PY2:
-            self.assertTrue(isinstance(tok.value, unicode))
-        else:
-            self.assertTrue(isinstance(tok.value, str))
+        tok, = self.doLex('foo')
+        self.assertTrue(isinstance(tok.value, str))
 
 
 class ProgressiveLexerUnicodeTestCase(LexerUnicodeTestCaseMixin, ProgressiveLexerTestCase):
@@ -242,7 +239,7 @@ class LexerConsumerTestCaseMixin(object):
             def STR(self, tok):
                 class StringBuilder(object):
                     def __init__(self):
-                        self.value = six.StringIO()
+                        self.value = io.StringIO()
                         self.state = 0
                     def feed(self, char):
                         if self.state == 0:

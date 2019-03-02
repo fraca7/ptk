@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import six
 import base, unittest
 from ptk.regex import RegexTokenizer, RegexParser, RegularExpression, LitteralCharacterClass, \
      RegexParseError, buildRegex
@@ -122,25 +121,17 @@ class RegexParserTestCaseMixin(object):
 
 
 class RegexParserUnicodeTestCase(RegexParserTestCaseMixin, unittest.TestCase):
-    def _parse(self, rx):
-        if six.PY2 and isinstance(rx, str):
-            rx = rx.decode('UTF-8')
-        return super(RegexParserUnicodeTestCase, self)._parse(rx)
-
-    def _match(self, rx, s):
-        if six.PY2 and isinstance(s, str):
-            s = s.decode('UTF-8')
-        return super(RegexParserUnicodeTestCase, self)._match(rx, s)
+    pass
 
 
 class RegexParserBytesTestCase(RegexParserTestCaseMixin, unittest.TestCase):
     def _parse(self, rx):
-        if six.PY3 and isinstance(rx, str):
+        if isinstance(rx, str):
             rx = rx.encode('UTF-8')
         return super(RegexParserBytesTestCase, self)._parse(rx)
 
     def _match(self, rx, s):
-        if six.PY3 and isinstance(s, str):
+        if isinstance(s, str):
             s = s.encode('UTF-8')
         return super(RegexParserBytesTestCase, self)._match(rx, s)
 

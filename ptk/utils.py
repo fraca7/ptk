@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-# (c) Jérôme Laheurte 2015-2018
+# (c) Jérôme Laheurte 2015-2019
 # See LICENSE.txt
 
 """
@@ -44,3 +44,7 @@ def callbackByName(funcName):
     def _wrapper(instance, *args, **kwargs):
         return getattr(instance, funcName)(*args, **kwargs)
     return _wrapper
+
+
+def chars(s):
+    return (s, s.encode('ascii')[0])

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
 """
@@ -11,7 +11,7 @@ $ echo '3*4+6' | python3 ./defer_calc.py
 
 """
 
-import six, operator, os, sys, codecs
+import operator, os, sys, codecs
 
 from ptk.deferred_lexer import token, DeferredLexer, EOF
 from ptk.deferred_parser import production, leftAssoc, DeferredLRParser, ParseError
@@ -25,7 +25,7 @@ from twisted.internet import stdio, reactor
 @leftAssoc('*', '/')
 class Parser(DeferredLRParser, DeferredLexer):
     def deferNewSentence(self, result):
-        six.print_('== Result:', result)
+        print('== Result:', result)
         return succeed(None)
 
     # Lexer
@@ -40,7 +40,7 @@ class Parser(DeferredLRParser, DeferredLexer):
 
     @production('E -> "-" E<value>', priority='*')
     def minus(self, value):
-        six.print_('== Neg: - %d' % value)
+        print('== Neg: - %d' % value)
         return -value # You can return something else than a Deferred.
 
     @production('E -> "(" E<value> ")"')
@@ -56,7 +56,7 @@ class Parser(DeferredLRParser, DeferredLexer):
     @production('E -> E<left> "*"<op> E<right>')
     @production('E -> E<left> "/"<op> E<right>')
     def binaryop(self, left, op, right):
-        six.print_('Binary operation: %s %s %s' % (left, op, right))
+        print('Binary operation: %s %s %s' % (left, op, right))
         return succeed({
             '+': operator.add,
             '-': operator.sub,
@@ -71,7 +71,7 @@ class BytesProtocol(Protocol):
         self.decoder = codecs.getincrementaldecoder('utf_8')()
 
     def connectionLost(self, reason):
-        six.print_('Connection lost: %s' % reason)
+        print('Connection lost: %s' % reason)
         reactor.stop()
 
     def dataReceived(self, data):
@@ -86,7 +86,7 @@ class BytesProtocol(Protocol):
                     if char == '\n':
                         char = EOF
                     else:
-                        six.print_('Input char: "%s"' % repr(char))
+                        print('Input char: "%s"' % repr(char))
                     self.parser.deferFeed(char).addCallbacks(next, self.error)
                 else:
                     next(None)
@@ -95,7 +95,7 @@ class BytesProtocol(Protocol):
         next(None)
 
     def error(self, reason):
-        six.print_('ERROR: %s' % reason)
+        print('ERROR: %s' % reason)
 
 
 stdio.StandardIO(BytesProtocol())

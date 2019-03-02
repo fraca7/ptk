@@ -3,7 +3,6 @@
 import sys
 import os
 import shlex
-import six
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 from ptk.meta import version, PackageInfo
@@ -18,7 +17,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 project = PackageInfo.project_name
-copyright = six.u('2018, %s') % PackageInfo.author_name
+copyright = '2019, %s' % PackageInfo.author_name
 author = PackageInfo.author_name
 release = version
 language = None
@@ -28,4 +27,4 @@ todo_include_todos = False
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
-htmlhelp_basename = six.u('{name}doc').format(name=author)
+htmlhelp_basename = '{name}doc'.format(name=author)

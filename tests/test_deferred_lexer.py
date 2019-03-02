@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import base, unittest
-import six
 
 from test_lexer import EOF, LexerBasicTestCaseMixin, PositionTestCaseMixin, TokenTypeTestCaseMixin, \
      LexerByteTestCaseMixin, LexerUnicodeTestCaseMixin, LexerConsumerTestCaseMixin, \

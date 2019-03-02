@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import six
 import base, unittest
 
 from ptk.parser import LRParser, ParseError, leftAssoc, rightAssoc, nonAssoc
@@ -13,16 +12,16 @@ class TestedParser(LRParser, ProgressiveLexer):
         self.seen = list()
         super(TestedParser, self).__init__(*args, **kwargs)
 
-    @token(six.u('[1-9][0-9]*'))
+    @token('[1-9][0-9]*')
     def number(self, tok):
         tok.value = int(tok.value)
 
-    @production(six.u('E -> E<left> "+" E<right>'))
+    @production('E -> E<left> "+" E<right>')
     def sum(self, left, right):
         self.seen.append(('+', left, right))
         return left + right
 
-    @production(six.u('E -> E<left> "*" E<right>'))
+    @production('E -> E<left> "*" E<right>')
     def mult(self, left, right):
         self.seen.append(('*', left, right))
         return left * right
@@ -40,7 +39,7 @@ class DefaultShiftReduceTestCase(unittest.TestCase):
         self.parser = TestedParser()
 
     def test_shift(self):
-        self.parser.parse(six.u('2+3*4'))
+        self.parser.parse('2+3*4')
         self.assertEqual(self.parser.seen, [('*', 3, 4), ('+', 2, 12)])
 
 
@@ -50,13 +49,13 @@ class DefaultReduceReduceTestCase(unittest.TestCase):
             def __init__(self, *args, **kwargs):
                 self.seen = list()
                 super(Parser, self).__init__(*args, **kwargs)
-            @token(six.u('[a-zA-Z]+'))
+            @token('[a-zA-Z]+')
             def word(self, tok):
                 pass
-            @production(six.u('sequence -> maybeword | sequence word |'))
+            @production('sequence -> maybeword | sequence word |')
             def seq(self):
                 self.seen.append('seq')
-            @production(six.u('maybeword -> word |'))
+            @production('maybeword -> word |')
             def maybe(self):
                 self.seen.append('maybe')
             def newSentence(self, sentence):
@@ -65,7 +64,7 @@ class DefaultReduceReduceTestCase(unittest.TestCase):
         self.parser = Parser()
 
     def test_reduce(self):
-        self.parser.parse(six.u(''))
+        self.parser.parse('')
         self.assertEqual(self.parser.seen, ['seq'])
 
 
@@ -78,7 +77,7 @@ class LeftAssociativityTestCase(unittest.TestCase):
         self.parser = Parser()
 
     def test_assoc(self):
-        self.parser.parse(six.u('1+2+3'))
+        self.parser.parse('1+2+3')
         self.assertEqual(self.parser.seen, [('+', 1, 2), ('+', 3, 3)])
 
 
@@ -91,7 +90,7 @@ class RightAssociativityTestCase(unittest.TestCase):
         self.parser = Parser()
 
     def test_assoc(self):
-        self.parser.parse(six.u('1+2+3'))
+        self.parser.parse('1+2+3')
         self.assertEqual(self.parser.seen, [('+', 2, 3), ('+', 1, 5)])
 
 
@@ -101,7 +100,7 @@ class PrecedenceTestCase(unittest.TestCase):
         @leftAssoc('*')
         @nonAssoc('<')
         class Parser(TestedParser):
-            @production(six.u('E -> E "<" E'))
+            @production('E -> E "<" E')
             def inf(self):
                 pass
 
@@ -132,18 +131,18 @@ class OverridePrecedenceTestCase(unittest.TestCase):
             def __init__(self, *args, **kwargs):
                 self.seen = list()
                 super(Parser, self).__init__(*args, **kwargs)
-            @token(six.u('[1-9][0-9]*'))
+            @token('[1-9][0-9]*')
             def number(self, tok):
                 tok.value = int(tok.value)
-            @production(six.u('E -> E<left> "+" E<right>'))
+            @production('E -> E<left> "+" E<right>')
             def sum(self, left, right):
                 self.seen.append(('+', left, right))
                 return left + right
-            @production(six.u('E -> E<left> "*" E<right>'), priority='mult')
+            @production('E -> E<left> "*" E<right>', priority='mult')
             def mult(self, left, right):
                 self.seen.append(('*', left, right))
                 return left * right
-            @production(six.u('E -> number<n>'))
+            @production('E -> number<n>')
             def litteral(self, n):
                 return n
             def newSentence(self, sentence):

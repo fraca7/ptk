@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
-import six
 import base, unittest
 
 from ptk.regex import TokenizeError, RegexTokenizer, \
@@ -13,9 +12,6 @@ from ptk.regex import TokenizeError, RegexTokenizer, \
 
 class TokenizerTestCase(unittest.TestCase):
     def _tokenize(self, regex):
-        if six.PY2 and isinstance(regex, str):
-            regex = regex.decode('UTF-8')
-
         tokenizer = RegexTokenizer(regex)
         return list(tokenizer.tokens())
 
@@ -40,13 +36,13 @@ class BasicTestCase(TokenizerTestCase):
 
 class ConcatTestCase(TokenizerTestCase):
     def test_concat(self):
-        self.assertEqual(self._tokenize('abc'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('a'))),
-                                                 (RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('b'))),
-                                                 (RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('c')))])
+        self.assertEqual(self._tokenize('abc'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
+                                                 (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('b')),
+                                                 (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('c'))])
 
     def test_escape(self):
-        self.assertEqual(self._tokenize(r'\[\n'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('['))),
-                                                   (RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('\n')))])
+        self.assertEqual(self._tokenize(r'\[\n'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('[')),
+                                                   (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('\n'))])
 
     def test_error(self):
         try:
@@ -59,8 +55,8 @@ class ConcatTestCase(TokenizerTestCase):
 
 class RangeTestCase(TokenizerTestCase):
     def test_cache(self):
-        rx1 = RegexCharacterClass(six.u('[a-z]'))
-        rx2 = RegexCharacterClass(six.u('[a-z]'))
+        rx1 = RegexCharacterClass('[a-z]')
+        rx2 = RegexCharacterClass('[a-z]')
         self.assertTrue(rx1._rx is rx2._rx)
 
     def test_unterminated(self):
@@ -86,10 +82,8 @@ class RangeTestCase(TokenizerTestCase):
         self.assertEqual(type_, RegexTokenizer.TOK_CLASS)
         self.assertTrue(isinstance(value, CharacterClass))
         for item in testin:
-            item = item.decode('UTF-8') if six.PY2 and isinstance(item, str) else item
             self.assertTrue(item in value, '"%s" should match "%s"' % (item, rx))
         for item in testout:
-            item = item.decode('UTF-8') if six.PY2 and isinstance(item, str) else item
             self.assertFalse(item in value, '"%s" should not match "%s"' % (item, rx))
 
     def test_simple(self):
@@ -117,16 +111,16 @@ class RangeTestCase(TokenizerTestCase):
         self._test_range(r'[\\-\]]', ['\\', ']'], ['a'])
 
     def test_class_w(self):
-        self._test_range(r'\w', [six.u('\u00E9')], ['~'])
+        self._test_range(r'\w', ['\u00E9'], ['~'])
 
     def test_class_d_class(self):
-        self._test_range(r'[\wa]', [six.u('\u00E9'), 'a'], ['~'])
+        self._test_range(r'[\wa]', ['\u00E9', 'a'], ['~'])
 
     def test_class_d(self):
         self._test_range(r'\d', ['0'], ['a'])
 
     def test_any(self):
-        self.assertEqual(self._tokenize('a.'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('a'))),
+        self.assertEqual(self._tokenize('a.'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
                                                 (RegexTokenizer.TOK_CLASS, AnyCharacterClass())])
 
 
@@ -196,19 +190,19 @@ class ExponentTestCase(TokenizerTestCase):
             self.fail('Did not raise InvalidExponentError')
 
     def test_single_value(self):
-        self.assertEqual(self._tokenize('a{42}'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('a'))),
+        self.assertEqual(self._tokenize('a{42}'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
                                                    (RegexTokenizer.TOK_EXPONENT, ExponentToken(42, 42))])
 
     def test_interval(self):
-        self.assertEqual(self._tokenize('a{13-15}'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('a'))),
+        self.assertEqual(self._tokenize('a{13-15}'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
                                                       (RegexTokenizer.TOK_EXPONENT, ExponentToken(13, 15))])
 
     def test_kleene(self):
-        self.assertEqual(self._tokenize('a*'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('a'))),
+        self.assertEqual(self._tokenize('a*'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
                                                 (RegexTokenizer.TOK_EXPONENT, ExponentToken(0, None))])
 
     def test_closure(self):
-        self.assertEqual(self._tokenize('a+'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('a'))),
+        self.assertEqual(self._tokenize('a+'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
                                                 (RegexTokenizer.TOK_EXPONENT, ExponentToken(1, None))])
 
 
@@ -217,28 +211,28 @@ class SymbolTestMixin(object):
 
     def test_start(self):
         self.assertEqual(self._tokenize(r'{symbol}s'.format(symbol=self.symbol[1])), [self.symbol,
-                                                                                      (RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('s')))])
+                                                                                      (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('s'))])
 
     def test_middle(self):
-        self.assertEqual(self._tokenize(r's{symbol}e'.format(symbol=self.symbol[1])), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('s'))),
+        self.assertEqual(self._tokenize(r's{symbol}e'.format(symbol=self.symbol[1])), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('s')),
                                                                                        self.symbol,
-                                                                                       (RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('e')))])
+                                                                                       (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('e'))])
 
     def test_end(self):
-        self.assertEqual(self._tokenize(r's{symbol}'.format(symbol=self.symbol[1])), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass(six.u('s'))),
+        self.assertEqual(self._tokenize(r's{symbol}'.format(symbol=self.symbol[1])), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('s')),
                                                                                       self.symbol])
 
 
 class LParenTestCase(SymbolTestMixin, TokenizerTestCase):
-    symbol = (RegexTokenizer.TOK_LPAREN, six.u('('))
+    symbol = (RegexTokenizer.TOK_LPAREN, '(')
 
 
 class RParenTestCase(SymbolTestMixin, TokenizerTestCase):
-    symbol = (RegexTokenizer.TOK_RPAREN, six.u(')'))
+    symbol = (RegexTokenizer.TOK_RPAREN, ')')
 
 
 class UnionTestCase(SymbolTestMixin, TokenizerTestCase):
-    symbol = (RegexTokenizer.TOK_UNION, six.u('|'))
+    symbol = (RegexTokenizer.TOK_UNION, '|')
 
 
 if __name__ == '__main__':
