@@ -49,18 +49,16 @@ All unit tests pass on the following platforms/Python version:
 +-----+-------+-----+---------+
 |     | Linux | OSX | Windows |
 +=====+=======+=====+=========+
-| 3.2 |   X   |     |    X    |
-+-----+-------+-----+---------+
 | 3.3 |       |     |    X    |
 +-----+-------+-----+---------+
 | 3.4 |       |     |    X    |
 +-----+-------+-----+---------+
-| 3.5 |       |  X  |         |
+| 3.5 |       |     |    X    |
 +-----+-------+-----+---------+
-
-See the
-`Buildbot <https://jeromelaheurte.net/buildbot/ptk/waterfall>`_ for
-details.
+| 3.6 |   X   |     |    X    |
++-----+-------+-----+---------+
+| 3.7 |       |  X  |    X    |
++-----+-------+-----+---------+
 
 Installation
 ------------
@@ -71,8 +69,8 @@ Using pip::
 
 From source::
 
-  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.3.5.tar.gz
-  $ tar xjf ptk-1.3.5.tar.bz2; cd ptk-1.3.5
+  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.3.6.tar.gz
+  $ tar xjf ptk-1.3.6.tar.bz2; cd ptk-1.3.6
   $ sudo python3 ./setup.py install
 
 Sample usage
@@ -128,14 +126,14 @@ Python file from a Yacc or Bison grammar file.
 API documentation
 -----------------
 
-The full documentation is hosted `here <http://ptk.readthedocs.io/en/release-1.3.5/>`_.
+The full documentation is hosted `here <http://ptk.readthedocs.io/en/release-1.3.6/>`_.
 
 Changelog
 ---------
 
 Version 1.3.6:
 
-- Drop support for Python 2.
+- Drop support for Python versions older than 3.3.
 
 Version 1.3.5:
 
