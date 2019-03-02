@@ -30,11 +30,6 @@ class _DeferReduce(_Reduce):
 
 
 class DeferredProductionParser(ProductionParser):
-    # XXXFIXME inheritance problem
-    def __init__(self, *args, **kwargs):
-        self.__class__.__prepared__ = True
-        super(DeferredProductionParser, self).__init__(*args, **kwargs)
-
     def _wrapCallbackOne(self):
         def cbOne(_, item):
             return succeed([item])
