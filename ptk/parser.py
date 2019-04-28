@@ -25,6 +25,7 @@ class ParseError(Exception):
         self.token = tok
         super().__init__('Unexpected token "%s" (%s) in state "%s"' % (tok.value, tok.type, sorted(state)))
 
+        self._state = state
         self._expecting = set()
         for terminal in grammar.tokenTypes():
             if grammar.__actions__.get((state, terminal), None) is not None:
@@ -35,6 +36,12 @@ class ParseError(Exception):
         Returns a set of tokens types that would have been valid in input.
         """
         return self._expecting
+
+    def state(self):
+        """
+        Returns the parser state when the error was encountered.
+        """
+        return self._state
 
 
 def leftAssoc(*operators):
