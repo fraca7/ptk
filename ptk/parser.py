@@ -124,6 +124,17 @@ class _Item(object):
         """
         return _Item(self.production, self.dot + 1, self.terminal)
 
+    def hasPrefix(self, *tokens):
+        """
+        Return True if the passed sequence of token types appears right before the dot
+        """
+        if len(tokens) > self.dot:
+            return False
+        for tok1, tok2 in zip(self.production.right[self.dot - len(tokens):self.dot], tokens):
+            if tok1 != tok2:
+                return False
+        return True
+
     def __repr__(self):
         symbols = list(self.production.right)
         symbols.insert(self.dot, '\u2022')
