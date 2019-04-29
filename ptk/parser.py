@@ -21,7 +21,7 @@ class ParseError(Exception):
 
     :ivar token: The unexpected token.
     """
-    def __init__(self, grammar, tok, state, lastToken):
+    def __init__(self, grammar, tok, state, tokens):
         self.token = tok
         super().__init__('Unexpected token "%s" (%s) in state "%s"' % (tok.value, tok.type, sorted(state)))
 
@@ -30,7 +30,7 @@ class ParseError(Exception):
         for terminal in grammar.tokenTypes():
             if grammar.__actions__.get((state, terminal), None) is not None:
                 self._expecting.add(terminal)
-        self._lastToken = lastToken
+        self._tokens = tokens
 
     def expecting(self):
         """
@@ -48,7 +48,13 @@ class ParseError(Exception):
         """
         Returns the last valid token seen before this error
         """
-        return self._lastToken
+        return self._tokens[-1]
+
+    def tokens(self):
+        """
+        Returns all tokens seen
+        """
+        return self._tokens
 
 
 def leftAssoc(*operators):
@@ -215,6 +221,7 @@ class LRParser(Grammar):
             for action, stack in self._processToken(tok):
                 if action.doAction(self, stack, tok):
                     break
+            self.__tokens.append(tok)
         except _Accept as exc:
             self._restartParser()
             return self.newSentence(exc.result)
@@ -227,7 +234,7 @@ class LRParser(Grammar):
         while True:
             action = self.__actions__.get((self.__stack[-1].state, tok.type), None)
             if action is None:
-                raise ParseError(self, tok, self.__stack[-1].state, self.__stack[-1].value)
+                raise ParseError(self, tok, self.__stack[-1].state, self.__tokens)
             yield action, self.__stack
 
     def newSentence(self, sentence): # pragma: no cover
@@ -423,6 +430,7 @@ class LRParser(Grammar):
 
     def _restartParser(self):
         self.__stack = [_StackItem(self._startState, None)]
+        self.__tokens = []
 
     @classmethod
     @memoize
