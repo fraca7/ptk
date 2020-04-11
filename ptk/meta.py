@@ -9,7 +9,7 @@ class PackageInfo(object):
     version_info = map(int, version.split('.'))
 
     project_name = 'ptk'
-    project_url = 'https://bitbucket.org/fraca7/ptk'
+    project_url = 'https://github.com/fraca7/ptk'
     download_url = 'https://pypi.python.org/packages/source/p/ptk/ptk-%s.tar.gz' % version
 
     author_name = 'J\u00E9r\u00F4me Laheurte'
