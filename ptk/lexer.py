@@ -5,9 +5,8 @@
 
 import inspect
 import re
-import collections
 
-from ptk.regex import buildRegex, DeadState, RegexTokenizer
+from ptk.regex import buildRegex, DeadState, RegexTokenizer, LexerPosition
 from ptk.utils import Singleton, callbackByName, chars
 
 
@@ -73,9 +72,6 @@ class EOF(metaclass=Singleton):
         return self
 
 
-_LexerPosition = collections.namedtuple('_LexerPosition', ['column', 'line'])
-
-
 class LexerBase(metaclass=_LexerMeta):
     """
     This defines the interface for lexer classes. For concrete
@@ -89,13 +85,14 @@ class LexerBase(metaclass=_LexerMeta):
     __tokens__ = ()
 
     class _MutableToken(object):
-        def __init__(self, type_, value):
+        def __init__(self, type_, value, position):
             self.type = type_
             self.value = value
+            self.position = position
 
         def token(self):
             """Returns the unmutable equivalent"""
-            return EOF if EOF in [self.type, self.value] else RegexTokenizer.Token(self.type, self.value)
+            return EOF if EOF in [self.type, self.value] else RegexTokenizer.Token(self.type, self.value, self.position)
 
     def __init__(self):
         super().__init__()
@@ -103,7 +100,7 @@ class LexerBase(metaclass=_LexerMeta):
 
     def restartLexer(self, resetPos=True):
         if resetPos:
-            self._pos = _LexerPosition(0, 1)
+            self._pos = LexerPosition(0, 1)
             self._input = list()
         self._consumer = None
 
@@ -118,14 +115,14 @@ class LexerBase(metaclass=_LexerMeta):
         Advances the current position by *count* columns.
         """
         col, row = self._pos
-        self._pos = _LexerPosition(col + count, row)
+        self._pos = LexerPosition(col + count, row)
 
     def advanceLine(self, count=1):
         """
         Advances the current position by *count* lines.
         """
         _, row = self._pos
-        self._pos = _LexerPosition(0, row + count)
+        self._pos = LexerPosition(0, row + count)
 
     @staticmethod
     def ignore(char):
@@ -252,7 +249,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
                     if tok is not None:
                         self.setConsumer(None)
                         if tok[0] is not None:
-                            self.newToken(self.Token(*tok))
+                            self.newToken(self.Token(*tok, self.position()))
                 pos += 1
         return pos
 
@@ -263,6 +260,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
     def _findMatch(self, string, pos):
         match = None
         matchlen = 0
+        pos2d = self.position()
         for rx, callback, defaultType in self._regexes:
             mtc = rx.match(string[pos:])
             if mtc:
@@ -273,7 +271,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
 
         if match:
             value, callback, defaultType = match
-            tok = self._MutableToken(defaultType, value)
+            tok = self._MutableToken(defaultType, value, pos2d)
             callback(self, tok)
             pos += matchlen
             if self.consumer() is None and tok.type is not None:
@@ -335,7 +333,7 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
                 if tok is not None:
                     self.setConsumer(None)
                     if tok[0] is not None:
-                        yield self.Token(*tok)
+                        yield self.Token(*tok, self.position())
             return
 
         try:
@@ -404,7 +402,7 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
         self._input.extend(remain)
         for _, callback, defaultType in self._allTokens()[1]:
             if callback in matches:
-                tok = self._MutableToken(defaultType, match)
+                tok = self._MutableToken(defaultType, match, self.position())
                 callback(self, tok)
                 if tok.type is None or self.consumer() is not None:
                     break

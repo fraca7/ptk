@@ -81,7 +81,7 @@ class AsyncLexer(ProgressiveLexer):
             if tok is not None:
                 self.setConsumer(None)
                 if tok[0] is not None:
-                    await yield_(self.Token(*tok))
+                    await yield_(self.Token(*tok, self.position()))
             return
 
         try:

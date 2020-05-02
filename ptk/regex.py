@@ -20,6 +20,9 @@ def intValue(char):
     return int(char)
 
 
+LexerPosition = collections.namedtuple('_LexerPosition', ['column', 'line'])
+
+
 #===============================================================================
 # Regex objects
 
@@ -297,7 +300,7 @@ class RegexTokenizer(object): # pylint: disable=R0903
     TOK_RPAREN = 4
     TOK_UNION = 5
 
-    Token = collections.namedtuple('Token', ['type', 'value'])
+    Token = collections.namedtuple('Token', ['type', 'value', 'position'])
 
     def __init__(self, regex):
         self._stack = list(reversed(regex))
@@ -305,6 +308,7 @@ class RegexTokenizer(object): # pylint: disable=R0903
         self._currentClass = None
         self._exponentValue = 0
         self._startExponent = None
+        self._pos = LexerPosition(1, 1)
 
     def tokens(self):
         """
@@ -319,6 +323,7 @@ class RegexTokenizer(object): # pylint: disable=R0903
             state = getattr(self, '_state%d' % self._state)
             state = state(char, tokenList)
             self._state = state if state is not None else self._state
+            self._pos = self._pos._replace(column=self._pos.column + 1)
 
         if self._state == 1:
             raise BackslashAtEndOfInputError('Backslash at end of string')
@@ -334,17 +339,17 @@ class RegexTokenizer(object): # pylint: disable=R0903
     def _state0(self, char, tokenList):
         # Normal state
         if char in chars('*'):
-            tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(0, None)))
+            tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(0, None), self._pos))
         elif char in chars('+'):
-            tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(1, None)))
+            tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(1, None), self._pos))
         elif char in chars('.'):
-            tokenList.append(self.Token(self.TOK_CLASS, AnyCharacterClass()))
+            tokenList.append(self.Token(self.TOK_CLASS, AnyCharacterClass(), self._pos))
         elif char in chars('('):
-            tokenList.append(self.Token(self.TOK_LPAREN, char))
+            tokenList.append(self.Token(self.TOK_LPAREN, char, self._pos))
         elif char in chars(')'):
-            tokenList.append(self.Token(self.TOK_RPAREN, char))
+            tokenList.append(self.Token(self.TOK_RPAREN, char, self._pos))
         elif char in chars('|'):
-            tokenList.append(self.Token(self.TOK_UNION, char))
+            tokenList.append(self.Token(self.TOK_UNION, char, self._pos))
         elif char == '[':
             self._currentClass = io.StringIO()
             self._currentClass.write(char)
@@ -360,28 +365,28 @@ class RegexTokenizer(object): # pylint: disable=R0903
         elif char in chars('\\'):
             return 1
         else:
-            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(char)))
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(char), self._pos))
 
     def _state1(self, char, tokenList):
         # After a "\" in normal state
         if char in ('d', 's', 'w', 'D', 'S', 'W'):
-            tokenList.append(self.Token(self.TOK_CLASS, RegexCharacterClass('\\' + char)))
+            tokenList.append(self.Token(self.TOK_CLASS, RegexCharacterClass('\\' + char), self._pos))
         elif char in (b'd'[0], b's'[0], b'w'[0], b'D'[0], b'S'[0], b'W'[0]):
-            tokenList.append(self.Token(self.TOK_CLASS, RegexCharacterClass(bytes([b'\\', char]))))
+            tokenList.append(self.Token(self.TOK_CLASS, RegexCharacterClass(bytes([b'\\', char])), self._pos))
         elif char == 'r':
-            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass('\r')))
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass('\r'), self._pos))
         elif char == 'n':
-            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass('\n')))
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass('\n'), self._pos))
         elif char == 't':
-            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass('\t')))
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass('\t'), self._pos))
         elif char == b'r'[0]:
-            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(b'\r'[0])))
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(b'\r'[0]), self._pos))
         elif char == b'n'[0]:
-            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(b'\n'[0])))
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(b'\n'[0]), self._pos))
         elif char == b't'[0]:
-            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(b'\t'[0])))
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(b'\t'[0]), self._pos))
         else:
-            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(char)))
+            tokenList.append(self.Token(self.TOK_CLASS, LitteralCharacterClass(char), self._pos))
         return 0
 
     # Character classes
@@ -392,7 +397,7 @@ class RegexTokenizer(object): # pylint: disable=R0903
             return 3
         if char in chars(']'):
             self._currentClass.write(bytes([char]) if isinstance(char, int) else char)
-            tokenList.append(self.Token(self.TOK_CLASS, RegexCharacterClass(self._currentClass.getvalue())))
+            tokenList.append(self.Token(self.TOK_CLASS, RegexCharacterClass(self._currentClass.getvalue()), self._pos))
             self._currentClass = None
             return 0
         self._currentClass.write(bytes([char]) if isinstance(char, int) else char)
@@ -422,7 +427,7 @@ class RegexTokenizer(object): # pylint: disable=R0903
             self._startExponent = self._exponentValue
             return 11
         elif char in chars('}'):
-            tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(self._exponentValue, self._exponentValue)))
+            tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(self._exponentValue, self._exponentValue), self._pos))
             return 0
         else:
             try:
@@ -448,7 +453,7 @@ class RegexTokenizer(object): # pylint: disable=R0903
         if char in chars('}'):
             if self._startExponent > self._exponentValue:
                 raise InvalidExponentError('Invalid exponent range %d-%d' % (self._startExponent, self._exponentValue))
-            tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(self._startExponent, self._exponentValue)))
+            tokenList.append(self.Token(self.TOK_EXPONENT, ExponentToken(self._startExponent, self._exponentValue), self._pos))
             return 0
         try:
             v = intValue(char)

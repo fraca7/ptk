@@ -3,7 +3,7 @@
 import io
 import base, unittest
 
-from ptk.lexer import LexerError, token, EOF
+from ptk.lexer import LexerError, token, EOF, LexerPosition
 from ptk.lexer import ProgressiveLexer, ReLexer
 
 
@@ -67,28 +67,38 @@ class LexerBasicTestCaseMixin(object):
         self.lexer = TestedLexer(self)
 
     def test_single(self):
-        self.assertEqual(self.doLex('abc'), (('ID', 'abc'),))
+        token, = self.doLex('abc')
+        self.assertEqual((token.type, token.value), ('ID', 'abc'))
 
     def test_ignore_leading(self):
-        self.assertEqual(self.doLex('  abc'), (('ID', 'abc'),))
+        token, = self.doLex('  abc')
+        self.assertEqual((token.type, token.value), ('ID', 'abc'))
 
     def test_ignore_middle(self):
-        self.assertEqual(self.doLex('a bc'), (('ID', 'a'), ('ID', 'bc')))
+        tok1, tok2 = self.doLex('a bc')
+        self.assertEqual((tok1.type, tok1.value), ('ID', 'a'))
+        self.assertEqual((tok2.type, tok2.value), ('ID', 'bc'))
 
     def test_ignore_trailing(self):
-        self.assertEqual(self.doLex('abc  '), (('ID', 'abc'),))
+        token, = self.doLex('abc  ')
+        self.assertEqual((token.type, token.value), ('ID', 'abc'))
 
     def test_value(self):
-        self.assertEqual(self.doLex('42'), (('NUMBER', 42),))
+        token, = self.doLex('42')
+        self.assertEqual((token.type, token.value), ('NUMBER', 42))
 
     def test_forced_value_eof(self):
-        self.assertEqual(self.doLex('abc\n'), (('ID', 'abc'),))
+        token, = self.doLex('abc\n')
+        self.assertEqual((token.type, token.value), ('ID', 'abc'))
 
     def test_forced_value(self):
-        self.assertEqual(self.doLex('0xf'), (('NUMBER', 15),))
+        token, = self.doLex('0xf')
+        self.assertEqual((token.type, token.value), ('NUMBER', 15))
 
     def test_ignore(self):
-        self.assertEqual(self.doLex('a++b'), (('ID', 'a'), ('ID', 'b')))
+        tok1, tok2 = self.doLex('a++b')
+        self.assertEqual((tok1.type, tok1.value), ('ID', 'a'))
+        self.assertEqual((tok2.type, tok2.value), ('ID', 'b'))
 
     def test_tokenvalues(self):
         self.assertEqual(self.lexer.tokenTypes(), set(['ID', 'NUMBER', 'INC']))
@@ -105,19 +115,17 @@ class ReLexerBasicTestCase(LexerBasicTestCaseMixin, ReLexerTestCase):
 class PositionTestCaseMixin(object):
     def setUp(self):
         super().setUp()
-        class TestedLexer(self.lexerClass):
+        class TestedLexer(LexerUnderTestMixin, self.lexerClass):
             @staticmethod
             def ignore(char):
                 return char in [' ', '\n']
             @token('[a-z]')
             def letter(self, tok):
                 pass
-            def newToken(self, tok):
-                pass
 
-        self.lexer = TestedLexer()
+        self.lexer = TestedLexer(testCase=self)
 
-    def test_position(self):
+    def test_error_position(self):
         try:
             self.doLex('ab\ncd0aa')
         except LexerError as exc:
@@ -125,6 +133,11 @@ class PositionTestCaseMixin(object):
             self.assertEqual(exc.colno, 3)
         else:
             self.fail()
+
+    def test_token_positions(self):
+        tokens = self.doLex('ab\nc')
+        self.assertEqual([token.position for token in tokens],
+                         [LexerPosition(column=1, line=1), LexerPosition(column=2, line=1), LexerPosition(column=1, line=2)])
 
 
 class ProgressiveLexerPositionTestCase(PositionTestCaseMixin, ProgressiveLexerTestCase):
@@ -224,7 +237,8 @@ class LexerUnambiguousTestCase(ProgressiveLexerTestCase):
     def test_unambiguous(self):
         # If we arrive in a final state without any outgoing transition, it should be an instant match.
         self.lexer.feed('a')
-        self.assertEqual(self.tokens, [('ID', 'a')]) # Still a list because no EOF
+        token, = self.tokens
+        self.assertEqual((token.type, token.value), ('ID', 'a'))
 
 
 
@@ -256,7 +270,10 @@ class LexerConsumerTestCaseMixin(object):
         self.lexer = TestedLexer(self)
 
     def test_string(self):
-        self.assertEqual(self.doLex(r'ab"foo\"spam"eggs'), (('ID', 'ab'), ('STR', 'foo"spam'), ('ID', 'eggs')))
+        tok1, tok2, tok3 = self.doLex(r'ab"foo\"spam"eggs')
+        self.assertEqual((tok1.type, tok1.value), ('ID', 'ab'))
+        self.assertEqual((tok2.type, tok2.value), ('STR', 'foo"spam'))
+        self.assertEqual((tok3.type, tok3.value), ('ID', 'eggs'))
 
 
 class ProgressiveLexerConsumerTestCase(LexerConsumerTestCaseMixin, ProgressiveLexerTestCase):
@@ -305,7 +322,8 @@ class LexerInheritanceTestCaseMixin(object):
         self.lexer = ChildLexer(self)
 
     def test_inherit(self):
-        self.assertEqual(self.doLex('4'), (('digit', 4),))
+        token, = self.doLex('4')
+        self.assertEqual((token.type, token.value), ('digit', 4))
 
 
 class ProgressiveLexerInheritanceTestCase(LexerInheritanceTestCaseMixin, ProgressiveLexerTestCase):
@@ -326,7 +344,8 @@ class LexerUnterminatedTokenTestCaseMixin(object):
         self.lexer = TestedLexer(self)
 
     def test_simple(self):
-        self.assertEqual(self.doLex('abc'), (('ID', 'abc'),))
+        token, = self.doLex('abc')
+        self.assertEqual((token.type, token.value), ('ID', 'abc'))
 
     def test_unterminated(self):
         try:
@@ -358,7 +377,8 @@ class LexerLengthTestCaseMixin(object):
         self.lexer = TestedLexer(self)
 
     def test_longest(self):
-        self.assertEqual(self.doLex('<='), (('LTE', '<='),))
+        token, = self.doLex('<=')
+        self.assertEqual((token.type, token.value), ('LTE', '<='))
 
 
 class ProgressiveLexerLengthTestCase(LexerLengthTestCaseMixin, ProgressiveLexerTestCase):
@@ -382,7 +402,8 @@ class LexerPriorityTestCaseMixin(object):
         self.lexer = TestedLexer(self)
 
     def test_priority(self):
-        self.assertEqual(self.doLex('b'), (('A', 'b'),))
+        token, = self.doLex('b')
+        self.assertEqual((token.type, token.value), ('A', 'b'))
 
 
 class ProgressiveLexerPriorityTestCase(LexerPriorityTestCaseMixin, ProgressiveLexerTestCase):
@@ -406,7 +427,9 @@ class LexerRemainingCharactersTestCase(ProgressiveLexerTestCase):
         self.lexer = TestedLexer(self)
 
     def test_remain(self):
-        self.assertEqual(self.doLex('abaaba'), (('ID2', 'aba'), ('ID2', 'aba')))
+        t1, t2 = self.doLex('abaaba')
+        self.assertEqual((t1.type, t1.value), ('ID2', 'aba'))
+        self.assertEqual((t2.type, t2.value), ('ID2', 'aba'))
 
 
 class LexerEOFTestCaseMixin(object):

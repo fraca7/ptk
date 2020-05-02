@@ -36,13 +36,15 @@ class BasicTestCase(TokenizerTestCase):
 
 class ConcatTestCase(TokenizerTestCase):
     def test_concat(self):
-        self.assertEqual(self._tokenize('abc'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
-                                                 (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('b')),
-                                                 (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('c'))])
+        t1, t2, t3 = self._tokenize('abc')
+        self.assertEqual((t1.type, t1.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')))
+        self.assertEqual((t2.type, t2.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('b')))
+        self.assertEqual((t3.type, t3.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('c')))
 
     def test_escape(self):
-        self.assertEqual(self._tokenize(r'\[\n'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('[')),
-                                                   (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('\n'))])
+        t1, t2 = self._tokenize(r'\[\n')
+        self.assertEqual((t1.type, t1.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('[')))
+        self.assertEqual((t2.type, t2.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('\n')))
 
     def test_error(self):
         try:
@@ -78,7 +80,7 @@ class RangeTestCase(TokenizerTestCase):
     def _test_range(self, rx, testin, testout):
         tokens = self._tokenize(rx)
         self.assertEqual(len(tokens), 1)
-        type_, value = tokens[0]
+        type_, value, _ = tokens[0]
         self.assertEqual(type_, RegexTokenizer.TOK_CLASS)
         self.assertTrue(isinstance(value, CharacterClass))
         for item in testin:
@@ -120,8 +122,9 @@ class RangeTestCase(TokenizerTestCase):
         self._test_range(r'\d', ['0'], ['a'])
 
     def test_any(self):
-        self.assertEqual(self._tokenize('a.'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
-                                                (RegexTokenizer.TOK_CLASS, AnyCharacterClass())])
+        tok1, tok2 = self._tokenize('a.')
+        self.assertEqual((tok1.type, tok1.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')))
+        self.assertEqual((tok2.type, tok2.value), (RegexTokenizer.TOK_CLASS, AnyCharacterClass()))
 
 
 class ExponentTestCase(TokenizerTestCase):
@@ -190,37 +193,44 @@ class ExponentTestCase(TokenizerTestCase):
             self.fail('Did not raise InvalidExponentError')
 
     def test_single_value(self):
-        self.assertEqual(self._tokenize('a{42}'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
-                                                   (RegexTokenizer.TOK_EXPONENT, ExponentToken(42, 42))])
+        t1, t2 = self._tokenize('a{42}')
+        self.assertEqual((t1.type, t1.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')))
+        self.assertEqual((t2.type, t2.value), (RegexTokenizer.TOK_EXPONENT, ExponentToken(42, 42)))
 
     def test_interval(self):
-        self.assertEqual(self._tokenize('a{13-15}'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
-                                                      (RegexTokenizer.TOK_EXPONENT, ExponentToken(13, 15))])
+        t1, t2 = self._tokenize('a{13-15}')
+        self.assertEqual((t1.type, t1.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')))
+        self.assertEqual((t2.type, t2.value), (RegexTokenizer.TOK_EXPONENT, ExponentToken(13, 15)))
 
     def test_kleene(self):
-        self.assertEqual(self._tokenize('a*'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
-                                                (RegexTokenizer.TOK_EXPONENT, ExponentToken(0, None))])
+        t1, t2 = self._tokenize('a*')
+        self.assertEqual((t1.type, t1.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')))
+        self.assertEqual((t2.type, t2.value), (RegexTokenizer.TOK_EXPONENT, ExponentToken(0, None)))
 
     def test_closure(self):
-        self.assertEqual(self._tokenize('a+'), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')),
-                                                (RegexTokenizer.TOK_EXPONENT, ExponentToken(1, None))])
+        t1, t2 = self._tokenize('a+')
+        self.assertEqual((t1.type, t1.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('a')))
+        self.assertEqual((t2.type, t2.value), (RegexTokenizer.TOK_EXPONENT, ExponentToken(1, None)))
 
 
 class SymbolTestMixin(object):
     token = None # Subclass responsibility
 
     def test_start(self):
-        self.assertEqual(self._tokenize(r'{symbol}s'.format(symbol=self.symbol[1])), [self.symbol,
-                                                                                      (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('s'))])
+        t1, t2 = self._tokenize(r'{symbol}s'.format(symbol=self.symbol[1]))
+        self.assertEqual((t1.type, t1.value), self.symbol)
+        self.assertEqual((t2.type, t2.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('s')))
 
     def test_middle(self):
-        self.assertEqual(self._tokenize(r's{symbol}e'.format(symbol=self.symbol[1])), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('s')),
-                                                                                       self.symbol,
-                                                                                       (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('e'))])
+        t1, t2, t3 = self._tokenize(r's{symbol}e'.format(symbol=self.symbol[1]))
+        self.assertEqual((t1.type, t1.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('s')))
+        self.assertEqual((t2.type, t2.value), self.symbol)
+        self.assertEqual((t3.type, t3.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('e')))
 
     def test_end(self):
-        self.assertEqual(self._tokenize(r's{symbol}'.format(symbol=self.symbol[1])), [(RegexTokenizer.TOK_CLASS, LitteralCharacterClass('s')),
-                                                                                      self.symbol])
+        t1, t2 = self._tokenize(r's{symbol}'.format(symbol=self.symbol[1]))
+        self.assertEqual((t1.type, t1.value), (RegexTokenizer.TOK_CLASS, LitteralCharacterClass('s')))
+        self.assertEqual((t2.type, t2.value), self.symbol)
 
 
 class LParenTestCase(SymbolTestMixin, TokenizerTestCase):
