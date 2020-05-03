@@ -133,6 +133,30 @@ You can thus use  alternatives and default argument values to slightly change th
 	   else:
 	       # Second form
 
+Position in code
+^^^^^^^^^^^^^^^^
+
+You may want to store the position in the input stream at which a
+production matched, for warning reporting for example. The same syntax
+as for the named used in the left part of the production lets you get
+this information as a keyword argument:
+
+.. code-block:: python
+
+   from ptk.lexer import ReLexer
+   from ptk.parser import LRParser, production
+
+   class Parser(LRParser, ReLexer):
+       @production('SYMNAME<position> -> identifier<value> | identifier<value> left_bracket identifier<name> right_bracket')
+       def symname(self, position, value, name=None):
+           if name is None:
+	       # First form, name not specified
+	   else:
+	       # Second form
+
+In this case, the `position` argument will hold a named 2-tuple with
+attributes `column` and `line`. Those start at 1.
+
 Litteral tokens
 ^^^^^^^^^^^^^^^
 
