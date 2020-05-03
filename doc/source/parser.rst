@@ -8,6 +8,9 @@ Syntactic analysis
 
    .. code-block:: python
 
+      from ptk.lexer import ReLexer, token
+      from ptk.parser import LRParser, production
+
       class MyParser(LRParser, ReLexer):
           @production('E -> E "+" E')
 	  def sum(self):
@@ -19,6 +22,9 @@ Syntactic analysis
 
    .. code-block:: python
 
+      from ptk.lexer import ReLexer, token
+      from ptk.parser import LRParser, production
+
       class MyParser(LRParser, ReLexer):
           # omitting productions for binary +, -, * and /
 	  @production('E -> "-" E', priority='*')
@@ -28,6 +34,9 @@ Syntactic analysis
    You can also use a token type that has not been declared to the lexer as long as you have declared an explicit priority for it, using one of the associativity decorators:
 
    .. code-block:: python
+
+      from ptk.lexer import ReLexer, token
+      from ptk.parser import LRParser, production, leftAssoc, nonAssoc
 
       @leftAssoc('+', '-')
       @leftAssoc('*', '/')
@@ -55,6 +64,9 @@ The productions specified through the :py:func:`production` decorator must be sp
 
 .. code-block:: python
 
+   from ptk.lexer import ReLexer
+   from ptk.parser import LRParser, production
+
    class Parser(LRParser, ReLexer):
        @production('E -> E plus E')
        def binaryop_sum(self):
@@ -70,6 +82,9 @@ When you don't need separate semantic actions you can group several productions 
 
 .. code-block:: python
 
+   from ptk.lexer import ReLexer
+   from ptk.parser import LRParser, production
+
    class Parser(LRParser, ReLexer):
        @production('E -> E plus E | E minus E')
        def binaryop(self):
@@ -78,6 +93,9 @@ When you don't need separate semantic actions you can group several productions 
 Or decorating the same method several times:
 
 .. code-block:: python
+
+   from ptk.lexer import ReLexer
+   from ptk.parser import LRParser, production
 
    class Parser(LRParser, ReLexer):
        @production('E -> E plus E')
@@ -92,6 +110,9 @@ The semantic value associated with a production is the return value of the decor
 
 .. code-block:: python
 
+   from ptk.lexer import ReLexer
+   from ptk.parser import LRParser, production
+
    class Parser(LRParser, ReLexer):
        @production('E -> E<left> plus E<right>')
        def sum(self, left, right):
@@ -100,6 +121,9 @@ The semantic value associated with a production is the return value of the decor
 You can thus use  alternatives and default argument values to slightly change the action's behavior depending on the actual matched production:
 
 .. code-block:: python
+
+   from ptk.lexer import ReLexer
+   from ptk.parser import LRParser, production
 
    class Parser(LRParser, ReLexer):
        @production('SYMNAME -> identifier<value> | identifier<value> left_bracket identifier<name> right_bracket')
@@ -115,6 +139,9 @@ Litteral tokens
 A litteral token name may appear in a production, between double quotes. This allows you to skip declaring "simple" tokens at the lexer level.
 
 .. code-block:: python
+
+   from ptk.lexer import ReLexer
+   from ptk.parser import LRParser, production
 
    class Parser(LRParser, ReLexer):
        @production('E -> E "+" E')
@@ -191,6 +218,9 @@ Fully functional parser for a four-operations integer calculator:
 
 .. code-block:: python
 
+   from ptk.lexer import ReLexer, token
+   from ptk.parser import LRParser, production, leftAssoc
+
    @leftAssoc('+', '-')
    @leftAssoc('*', '/')
    class Parser(LRParser, ReLexer):
@@ -225,6 +255,9 @@ Fully functional parser for a four-operations integer calculator:
 Parsing lists of integers separated by commas:
 
 .. code-block:: python
+
+   from ptk.lexer import ReLexer, token
+   from ptk.parser import LRParser, production
 
    class Parser(LRParser, ReLexer):
        @token('[1-9][0-9]*')

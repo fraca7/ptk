@@ -14,6 +14,8 @@ Lexical analysis
 
    .. code-block:: python
 
+      from ptk.lexer import ReLexer, token
+
       class MyLexer(ReLexer):
           @token(r'[a-zA-Z_][a-zA-Z0-9_]*')
           def identifier(self, tok):
@@ -24,6 +26,8 @@ Lexical analysis
    *type* and *value*. You can modify the value in place:
 
    .. code-block:: python
+
+      from ptk.lexer import ReLexer, token
 
       class MyLexer(ReLexer):
           @token(r'[1-9][0-9]*')
@@ -37,6 +41,8 @@ Lexical analysis
    *types* parameter:
 
    .. code-block:: python
+
+      from ptk.lexer import ReLexer, token
 
       class MyLexer(ReLexer):
           @token(r'[a-zA-Z_][a-zA-Z0-9_]*', types=['builtin', 'identifier'])
