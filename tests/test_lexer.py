@@ -119,8 +119,8 @@ class PositionTestCaseMixin(object):
             @staticmethod
             def ignore(char):
                 return char in [' ', '\n']
-            @token('[a-z]')
-            def letter(self, tok):
+            @token('[a-z]+')
+            def identifier(self, tok):
                 pass
 
         self.lexer = TestedLexer(testCase=self)
@@ -135,9 +135,9 @@ class PositionTestCaseMixin(object):
             self.fail()
 
     def test_token_positions(self):
-        tokens = self.doLex('ab\nc')
-        self.assertEqual([token.position for token in tokens],
-                         [LexerPosition(column=1, line=1), LexerPosition(column=2, line=1), LexerPosition(column=1, line=2)])
+        tok1, tok2 = self.doLex('ab\n  int')
+        self.assertEqual(tok1.position, LexerPosition(column=1, line=1))
+        self.assertEqual(tok2.position, LexerPosition(column=3, line=2))
 
 
 class ProgressiveLexerPositionTestCase(PositionTestCaseMixin, ProgressiveLexerTestCase):

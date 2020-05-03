@@ -44,6 +44,7 @@ class Production(object):
     """
     def __init__(self, name, callback, priority=None, attributes=None):
         self.name = name
+        self.posarg = None
         self.callback = callback
         self.right = list()
         self.attributes = attributes or {}
@@ -66,8 +67,10 @@ class Production(object):
         prod.__ids = dict(self.__ids) # pylint: disable=W0212
         return prod
 
-    def apply(self, args):
+    def apply(self, args, position):
         kwargs = dict([(name, args[index]) for index, name in self.__ids.items()])
+        if self.posarg is not None:
+            kwargs[self.posarg] = position
         return self.callback, kwargs
 
     def rightmostTerminal(self, grammar):

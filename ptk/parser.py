@@ -8,7 +8,7 @@ import collections
 import logging
 import re
 
-from ptk.lexer import ProgressiveLexer, EOF, token
+from ptk.lexer import ProgressiveLexer, EOF, token, LexerPosition
 from ptk.grammar import Grammar, Production, GrammarError
 # production is only imported so that client code doesn't have to import it from grammar
 from ptk.grammar import production # pylint: disable=W0611
@@ -162,7 +162,7 @@ class _Accept(BaseException):
         super().__init__()
 
 
-_StackItem = collections.namedtuple('_StackItem', ['state', 'value'])
+_StackItem = collections.namedtuple('_StackItem', ['state', 'value', 'position'])
 
 
 class _Shift(object):
@@ -170,7 +170,7 @@ class _Shift(object):
         self.newState = newState
 
     def doAction(self, grammar, stack, tok): # pylint: disable=W0613
-        stack.append(_StackItem(self.newState, tok.value))
+        stack.append(_StackItem(self.newState, tok.value, tok.position))
         return True
 
 
@@ -180,20 +180,22 @@ class _Reduce(object):
         self.nargs = len(item.production.right)
 
     def doAction(self, grammar, stack, tok): # pylint: disable=W0613
-        callback, kwargs = self._getCallback(stack)
-        self._applied(grammar, stack, callback(grammar, **kwargs))
+        pos, (callback, kwargs) = self._getCallback(stack)
+        self._applied(grammar, stack, callback(grammar, **kwargs), pos)
         return False
 
-    def _applied(self, grammar, stack, prodVal):
-        stack.append(_StackItem(grammar.goto(stack[-1].state, self.item.production.name), prodVal))
+    def _applied(self, grammar, stack, prodVal, position):
+        stack.append(_StackItem(grammar.goto(stack[-1].state, self.item.production.name), prodVal, position))
 
     def _getCallback(self, stack):
         if self.nargs:
             args = [stackItem.value for stackItem in stack[-self.nargs:]]
+            pos = stack[-self.nargs].position
             stack[-self.nargs:] = []
         else:
             args = []
-        return self.item.production.apply(args)
+            pos = stack[-1].position # Hum.
+        return pos, self.item.production.apply(args, pos)
 
 
 class LRParser(Grammar):
@@ -429,8 +431,9 @@ class LRParser(Grammar):
         return cls._goto[(state, symbol)]
 
     def _restartParser(self):
-        self.__stack = [_StackItem(self._startState, None)]
+        self.__stack = [_StackItem(self._startState, None, LexerPosition(1, 1))]
         self.__tokens = []
+        self.restartLexer()
 
     @classmethod
     @memoize
@@ -471,9 +474,22 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
 
         # DECL -> identifier "->" PRODS
         prod = Production('DECL', cls.DECL)
-        prod.addSymbol('identifier', 'name')
+        prod.addSymbol('LEFT', 'left')
         prod.addSymbol('arrow')
         prod.addSymbol('PRODS', 'prods')
+        cls.__productions__.append(prod)
+
+        # LEFT -> identifier
+        prod = Production('LEFT', cls.LEFT)
+        prod.addSymbol('identifier', 'name')
+        cls.__productions__.append(prod)
+
+        # LEFT -> identifier "<" posarg ">"
+        prod = Production('LEFT', cls.LEFT)
+        prod.addSymbol('identifier', 'name')
+        prod.addSymbol('lchev')
+        prod.addSymbol('identifier', 'posarg')
+        prod.addSymbol('rchev')
         cls.__productions__.append(prod)
 
         # PRODS -> P
@@ -555,10 +571,11 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
         super().prepare(**kwargs)
 
     def newSentence(self, startSymbol):
-        name, prods = startSymbol
+        (name, posarg), prods = startSymbol
         for prod in prods:
             if prod.name is None:
                 prod.name = name
+                prod.posarg = posarg
         self.grammarClass.__productions__.extend(prods)
 
     # Lexer
@@ -621,10 +638,14 @@ class ProductionParser(LRParser, ProgressiveLexer): # pylint: disable=R0904
 
     # Parser
 
-    def DECL(self, name, prods):
+    def DECL(self, left, prods):
+        name, posarg = left
         if name in self.grammarClass.tokenTypes():
             raise GrammarError('"%s" is a token name and cannot be used as non-terminal' % name)
-        return (name, prods)
+        return (left, prods)
+
+    def LEFT(self, name, posarg=None):
+        return (name, posarg)
 
     def PRODS1(self, prodlist):
         return prodlist

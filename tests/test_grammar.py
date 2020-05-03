@@ -146,7 +146,7 @@ class ProductionTestCase(unittest.TestCase):
             self.fail()
 
     def test_kwargs(self):
-        cb, kwargs = self.production.apply([1, 2])
+        cb, kwargs = self.production.apply([1, 2], None)
         cb(self, **kwargs)
         self.assertEqual(self.calls, [{'b': 1}])
 

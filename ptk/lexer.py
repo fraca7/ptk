@@ -100,7 +100,7 @@ class LexerBase(metaclass=_LexerMeta):
 
     def restartLexer(self, resetPos=True):
         if resetPos:
-            self._pos = LexerPosition(0, 1)
+            self._pos = LexerPosition(column=1, line=1)
             self._input = list()
         self._consumer = None
 
@@ -114,15 +114,13 @@ class LexerBase(metaclass=_LexerMeta):
         """
         Advances the current position by *count* columns.
         """
-        col, row = self._pos
-        self._pos = LexerPosition(col + count, row)
+        self._pos = self._pos._replace(column=self._pos.column + count)
 
     def advanceLine(self, count=1):
         """
         Advances the current position by *count* lines.
         """
-        _, row = self._pos
-        self._pos = LexerPosition(0, row + count)
+        self._pos = self._pos._replace(column=1, line=self._pos.line + count)
 
     @staticmethod
     def ignore(char):
@@ -231,26 +229,28 @@ class ReLexer(LexerBase): # pylint: disable=W0223
     def _parse(self, string, pos):
         while pos < len(string):
             char = string[pos]
-            if char in chars('\n'):
-                self.advanceLine()
-            else:
-                self.advanceColumn()
-            if self.consumer() is None:
-                if self.ignore(char):
-                    pos += 1
-                    continue
-                pos = self._findMatch(string, pos)
-            else:
-                try:
-                    tok = self.consumer().feed(char)
-                except SkipToken:
-                    self.setConsumer(None)
+            try:
+                if self.consumer() is None:
+                    if self.ignore(char):
+                        pos += 1
+                        continue
+                    pos = self._findMatch(string, pos)
                 else:
-                    if tok is not None:
+                    try:
+                        tok = self.consumer().feed(char)
+                    except SkipToken:
                         self.setConsumer(None)
-                        if tok[0] is not None:
-                            self.newToken(self.Token(*tok, self.position()))
-                pos += 1
+                    else:
+                        if tok is not None:
+                            self.setConsumer(None)
+                            if tok[0] is not None:
+                                self.newToken(self.Token(*tok, self.position()))
+                    pos += 1
+            finally:
+                if char in chars('\n'):
+                    self.advanceLine()
+                else:
+                    self.advanceColumn()
         return pos
 
     def parse(self, string):
@@ -261,6 +261,7 @@ class ReLexer(LexerBase): # pylint: disable=W0223
         match = None
         matchlen = 0
         pos2d = self.position()
+
         for rx, callback, defaultType in self._regexes:
             mtc = rx.match(string[pos:])
             if mtc:
@@ -276,9 +277,10 @@ class ReLexer(LexerBase): # pylint: disable=W0223
             pos += matchlen
             if self.consumer() is None and tok.type is not None:
                 self.newToken(tok.token())
+            self.advanceColumn(matchlen - 1)
             return pos
         else:
-            raise LexerError(string[pos:pos+10], *self.position())
+            raise LexerError(string[pos:pos+10], *pos2d)
 
 
 class ProgressiveLexer(LexerBase): # pylint: disable=W0223
@@ -307,23 +309,24 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
             self.feed(char)
         self.feed(EOF)
 
-    def feed(self, char, charPos=None):
+    def feed(self, char):
         """
         Handle a single input character. When you're finished, call
         this with EOF as argument.
         """
-        self._input.append((char, charPos))
+
+        self._input.append((char, self.position()))
+        if char in chars('\n'):
+            self.advanceLine()
+        else:
+            self.advanceColumn()
+
         while self._input:
             char, charPos = self._input.pop(0)
             for tok in self._feed(char, charPos):
                 self.newToken(tok)
 
     def _feed(self, char, charPos): # pylint: disable=R0912,R0915
-        if char in chars('\n'):
-            self.advanceLine()
-        else:
-            self.advanceColumn()
-
         if self.consumer() is not None:
             try:
                 tok = self.consumer().feed(char)
@@ -333,7 +336,7 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
                 if tok is not None:
                     self.setConsumer(None)
                     if tok[0] is not None:
-                        yield self.Token(*tok, self.position())
+                        yield self.Token(*tok, charPos)
             return
 
         try:
@@ -373,12 +376,12 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
                 self._matches = [(pos, callback) for pos, callback in self._matches if pos == self._maxPos]
                 self._currentState = newState
 
-                self._currentMatch.append((char, self.position() if charPos is None else charPos))
+                self._currentMatch.append((char, charPos))
                 if self._currentState:
                     return
 
                 if self._maxPos == 0:
-                    raise LexerError(char, *self.position())
+                    raise LexerError(char, *charPos)
         except LexerError:
             self.restartLexer()
             raise
@@ -398,11 +401,12 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
         match = sep.join([(bytes([char]) if isinstance(char, int) else char) \
                           for char, pos in self._currentMatch[:self._maxPos]]) # byte or unicode
         remain = self._currentMatch[self._maxPos:]
+        pos = self._currentMatch[0][1]
         self.restartLexer(False)
         self._input.extend(remain)
         for _, callback, defaultType in self._allTokens()[1]:
             if callback in matches:
-                tok = self._MutableToken(defaultType, match, self.position())
+                tok = self._MutableToken(defaultType, match, pos)
                 callback(self, tok)
                 if tok.type is None or self.consumer() is not None:
                     break
