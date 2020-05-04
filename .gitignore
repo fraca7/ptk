@@ -2,3 +2,5 @@
 __pycache__
 doc/build
 html
+MANIFEST
+dist
