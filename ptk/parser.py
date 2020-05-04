@@ -32,6 +32,10 @@ class ParseError(Exception):
                 self._expecting.add(terminal)
         self._tokens = tokens
 
+    @property
+    def position(self):
+        return self.token.position
+
     def expecting(self):
         """
         Returns a set of tokens types that would have been valid in input.
