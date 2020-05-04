@@ -49,10 +49,17 @@ class LexerError(Exception):
     :ivar lineno: Line in input
     :ivar colno: Column in input
     """
-    def __init__(self, char, colno, lineno):
-        super().__init__('Unrecognized token "%s" at line %d, column %d' % (char, lineno, colno))
-        self.lineno = lineno
-        self.colno = colno
+    def __init__(self, char, pos):
+        super().__init__('Unrecognized token %s' % repr(char))
+        self.position = pos
+
+    # Getters for compatibility with <1.3.8
+    @property
+    def colno(self):
+        return self.position.column
+    @property
+    def lineno(self):
+        return self.position.line
 
 
 class EOF(metaclass=Singleton):
@@ -254,8 +261,12 @@ class ReLexer(LexerBase): # pylint: disable=W0223
         return pos
 
     def parse(self, string):
-        self._parse(string, 0)
-        return self.newToken(EOF)
+        try:
+            self._parse(string, 0)
+            return self.newToken(EOF)
+        except LexerError:
+            self.restartLexer()
+            raise
 
     def _findMatch(self, string, pos):
         match = None
@@ -280,7 +291,23 @@ class ReLexer(LexerBase): # pylint: disable=W0223
             self.advanceColumn(matchlen - 1)
             return pos
         else:
-            raise LexerError(string[pos:pos+10], *pos2d)
+            raise LexerError(self._guessToken(string, pos), pos2d)
+
+    def _guessToken(self, string, pos):
+        start = pos
+        while True:
+            pos += 1
+            if pos == len(string) or self.ignore(string[pos]):
+                break
+
+            for rx, callback, defaultType in self._regexes:
+                mtc = rx.match(string[pos:])
+                if mtc:
+                    break
+            else:
+                continue
+            break
+        return string[start:pos]
 
 
 class ProgressiveLexer(LexerBase): # pylint: disable=W0223
@@ -347,7 +374,7 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
                     return
                 self._maxPos = max(self._maxPos, max(pos[0] for regex, callback, defaultType, pos in self._currentState))
                 if self._maxPos == 0 and self._currentMatch:
-                    raise LexerError(self._currentMatch[0][0], *self._currentMatch[0][1])
+                    raise LexerError(self._currentMatch[0][0], self._currentMatch[0][1])
                 self._matches.extend([(pos[0], callback) for regex, callback, defaultType, pos in self._currentState if pos[0] == self._maxPos])
                 self._matches = [(pos, callback) for pos, callback in self._matches if pos == self._maxPos]
             else:
@@ -381,7 +408,7 @@ class ProgressiveLexer(LexerBase): # pylint: disable=W0223
                     return
 
                 if self._maxPos == 0:
-                    raise LexerError(char, *charPos)
+                    raise LexerError(char, charPos)
         except LexerError:
             self.restartLexer()
             raise
