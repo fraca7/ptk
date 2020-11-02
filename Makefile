@@ -26,7 +26,7 @@ lint:
 	-$(PYTHON) -m pylint ptk
 
 nuke:
-	hg purge --all
+	git clean -dxf
 
 documentation:
 	cd doc; $(MAKE) html
