@@ -4,3 +4,4 @@ doc/build
 html
 MANIFEST
 dist
+.coverage
