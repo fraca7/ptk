@@ -5,7 +5,7 @@
 
 
 class PackageInfo(object):
-    version = '1.3.7'
+    version = '1.3.8'
     version_info = map(int, version.split('.'))
 
     project_name = 'ptk'
