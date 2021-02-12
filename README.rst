@@ -126,7 +126,7 @@ Python file from a Yacc or Bison grammar file.
 API documentation
 -----------------
 
-The full documentation is hosted `here <http://ptk.readthedocs.io/en/release-1.3.8/>`_.
+The full documentation is hosted `here <http://ptk.readthedocs.io/en/latest/>`_.
 
 Changelog
 ---------
