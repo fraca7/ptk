@@ -69,8 +69,8 @@ Using pip::
 
 From source::
 
-  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.3.6.tar.gz
-  $ tar xjf ptk-1.3.6.tar.bz2; cd ptk-1.3.6
+  $ wget https://pypi.python.org/packages/source/p/ptk/ptk-1.3.8.tar.gz
+  $ tar xjf ptk-1.3.8.tar.bz2; cd ptk-1.3.8
   $ sudo python3 ./setup.py install
 
 Sample usage
@@ -126,10 +126,18 @@ Python file from a Yacc or Bison grammar file.
 API documentation
 -----------------
 
-The full documentation is hosted `here <http://ptk.readthedocs.io/en/release-1.3.6/>`_.
+The full documentation is hosted `here <http://ptk.readthedocs.io/en/release-1.3.8/>`_.
 
 Changelog
 ---------
+
+Version 1.3.8:
+
+- Add more error handling stuff
+
+Version 1.3.7:
+
+- Add token and production positions in source
 
 Version 1.3.6:
 
