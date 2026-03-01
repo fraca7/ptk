@@ -1,4 +1,9 @@
 
+NOTE
+====
+
+This has been moved to https://codeberg.org/fraca7/ptk
+
 Parser Toolkit
 ==============
 
